@@ -44,81 +44,75 @@
         </div>
 
         <!-- Tab System -->
-        <div class="flex space-x-4 space-x-reverse mb-6 border-b border-gray-300 pb-px">
-            <button onclick="switchTab('calls')" id="tabCalls" class="px-6 py-2 font-bold border-b-2 border-blue-600 text-blue-600 transition">קריאות וטכנאים</button>
-            <button onclick="switchTab('fleet')" id="tabFleet" class="px-6 py-2 font-bold text-gray-500 border-b-2 border-transparent hover:text-blue-600 transition">צי רכב (Fleet)</button>
-            <button onclick="switchTab('notifications')" id="tabNotifications" class="px-6 py-2 font-bold text-gray-500 border-b-2 border-transparent hover:text-blue-600 transition">התראות (SMS)</button>
-            <button onclick="switchTab('audit')" id="tabAudit" class="px-6 py-2 font-bold text-gray-500 border-b-2 border-transparent hover:text-blue-600 transition">ביקורת פרוטוקול (Audit)</button>
-            <button onclick="switchTab('technicians')" id="tabTechnicians" class="px-6 py-2 font-bold text-gray-500 border-b-2 border-transparent hover:text-blue-600 transition">ניהול טכנאים (Users)</button>
-            <button onclick="switchTab('customers')" id="tabCustomers" class="px-6 py-2 font-bold text-gray-500 border-b-2 border-transparent hover:text-blue-600 transition">ניהול לקוחות (End Users)</button>
-            <button onclick="switchTab('financials')" id="tabFinancials" class="px-6 py-2 font-bold text-gray-500 border-b-2 border-transparent hover:text-blue-600 transition">כספים (Financials)</button>
-            <button onclick="switchTab('inventory')" id="tabInventory" class="px-6 py-2 font-bold text-gray-500 border-b-2 border-transparent hover:text-blue-600 transition">מלאי ומפרטים (Inventory)</button>
-            <button onclick="switchTab('performance')" id="tabPerformance" class="px-6 py-2 font-bold text-gray-500 border-b-2 border-transparent hover:text-blue-600 transition">ביצועים (Performance)</button>
+        <div class="flex space-x-2 space-x-reverse mb-6 border-b border-gray-300 pb-px overflow-x-auto whitespace-nowrap">
+            <button onclick="switchTab('calls')" id="tabCalls" class="px-4 py-2 font-bold border-b-2 border-blue-600 text-blue-600 transition">קריאות</button>
+            <button onclick="switchTab('fleet')" id="tabFleet" class="px-4 py-2 font-bold text-gray-500 border-b-2 border-transparent hover:text-blue-600 transition">צי רכב</button>
+            <button onclick="switchTab('notifications')" id="tabNotifications" class="px-4 py-2 font-bold text-gray-500 border-b-2 border-transparent hover:text-blue-600 transition">התראות (SMS)</button>
+            <button onclick="switchTab('audit')" id="tabAudit" class="px-4 py-2 font-bold text-gray-500 border-b-2 border-transparent hover:text-blue-600 transition">ביקורת</button>
+            <button onclick="switchTab('technicians')" id="tabTechnicians" class="px-4 py-2 font-bold text-gray-500 border-b-2 border-transparent hover:text-blue-600 transition">טכנאים</button>
+            <button onclick="switchTab('shifts')" id="tabShifts" class="px-4 py-2 font-bold text-gray-500 border-b-2 border-transparent hover:text-blue-600 transition">משמרות</button>
+            <button onclick="switchTab('customers')" id="tabCustomers" class="px-4 py-2 font-bold text-gray-500 border-b-2 border-transparent hover:text-blue-600 transition">לקוחות</button>
+            <button onclick="switchTab('financials')" id="tabFinancials" class="px-4 py-2 font-bold text-gray-500 border-b-2 border-transparent hover:text-blue-600 transition">כספים</button>
+            <button onclick="switchTab('inventory')" id="tabInventory" class="px-4 py-2 font-bold text-gray-500 border-b-2 border-transparent hover:text-blue-600 transition">מלאי</button>
+            <button onclick="switchTab('performance')" id="tabPerformance" class="px-4 py-2 font-bold text-gray-500 border-b-2 border-transparent hover:text-blue-600 transition">ביצועים</button>
+            <button onclick="switchTab('settings')" id="tabSettings" class="px-4 py-2 font-bold text-gray-500 border-b-2 border-transparent hover:text-blue-600 transition">הגדרות</button>
         </div>
 
+        <!-- Sections -->
         <div id="callsSection">
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-                <!-- Map Section -->
                 <div class="lg:col-span-2 bg-white p-4 rounded-xl shadow-sm">
                     <div class="font-bold mb-4">מפת קריאות וטכנאים חיה</div>
                     <div id="map"></div>
                 </div>
-
-                <!-- Technicians Status -->
                 <div class="bg-white rounded-xl shadow-sm overflow-hidden">
                     <div class="p-4 bg-slate-50 border-b font-bold">סטטוס טכנאים</div>
-                    <div id="techList" class="divide-y">
-                        <!-- Techs will be rendered here -->
-                    </div>
+                    <div id="techList" class="divide-y"></div>
                 </div>
             </div>
-
-            <div class="grid grid-cols-1 gap-6">
-                <!-- Calls Table -->
-                <div class="bg-white rounded-xl shadow-sm overflow-hidden">
-                    <div class="p-4 bg-slate-50 border-b font-bold">קריאות שירות אחרונות</div>
-                    <div class="overflow-x-auto">
-                        <table class="w-full text-right border-collapse">
-                            <thead>
-                                <tr class="bg-slate-100 text-slate-600 text-sm">
-                                    <th class="p-4">מזהה</th>
-                                    <th class="p-4">סוג תקלה</th>
-                                    <th class="p-4">כתובת</th>
-                                    <th class="p-4">דחיפות</th>
-                                    <th class="p-4">טכנאי</th>
-                                    <th class="p-4">ETA</th>
-                                    <th class="p-4">סכום</th>
-                                    <th class="p-4">סטטוס</th>
-                                    <th class="p-4">פעולות</th>
-                                </tr>
-                            </thead>
-                            <tbody id="callsBody">
-                                <tr><td colspan="9" class="p-8 text-center text-slate-400">טוען נתונים...</td></tr>
-                            </tbody>
-                        </table>
-                    </div>
+            <div class="bg-white rounded-xl shadow-sm overflow-hidden">
+                <div class="p-4 bg-slate-50 border-b font-bold">קריאות שירות אחרונות</div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-right border-collapse">
+                        <thead>
+                            <tr class="bg-slate-100 text-slate-600 text-sm">
+                                <th class="p-4">מזהה</th>
+                                <th class="p-4">סוג תקלה</th>
+                                <th class="p-4">כתובת</th>
+                                <th class="p-4">דחיפות</th>
+                                <th class="p-4">טכנאי</th>
+                                <th class="p-4">ETA</th>
+                                <th class="p-4">סכום</th>
+                                <th class="p-4">סטטוס</th>
+                                <th class="p-4">פעולות</th>
+                            </tr>
+                        </thead>
+                        <tbody id="callsBody"></tbody>
+                    </table>
                 </div>
             </div>
         </div>
 
         <div id="fleetSection" class="hidden">
             <div class="bg-white rounded-xl shadow-sm overflow-hidden">
-                <div class="p-4 bg-slate-50 border-b font-bold">ניהול צי רכב</div>
+                <div class="p-4 bg-slate-50 border-b flex justify-between items-center">
+                    <span class="font-bold">ניהול צי רכב</span>
+                    <button onclick="openFleetModal()" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-blue-700 transition">הוסף רכב +</button>
+                </div>
                 <div class="overflow-x-auto">
                     <table class="w-full text-right border-collapse">
                         <thead>
                             <tr class="bg-slate-100 text-slate-600 text-sm">
                                 <th class="p-4">מזהה רכב</th>
                                 <th class="p-4">מספר רישוי</th>
-                                <th class="p-4">מד אוץ (Vehicle Mail)</th>
+                                <th class="p-4">מד אוץ (Odometer)</th>
                                 <th class="p-4">שמן אחרון</th>
                                 <th class="p-4">מים אחרון</th>
                                 <th class="p-4">סטטוס</th>
+                                <th class="p-4">פעולות</th>
                             </tr>
                         </thead>
-                        <tbody id="fleetBody">
-                            <!-- Fleet data here -->
-                        </tbody>
+                        <tbody id="fleetBody"></tbody>
                     </table>
                 </div>
             </div>
@@ -128,18 +122,16 @@
             <div class="bg-white rounded-xl shadow-sm overflow-hidden">
                 <div class="p-4 bg-slate-50 border-b font-bold">יומן התראות (SMS Log)</div>
                 <div class="overflow-x-auto">
-                    <table class="w-full text-right border-collapse">
+                    <table class="w-full text-right border-collapse text-sm">
                         <thead>
-                            <tr class="bg-slate-100 text-slate-600 text-sm">
+                            <tr class="bg-slate-100 text-slate-600">
                                 <th class="p-4">זמן</th>
                                 <th class="p-4">נמען</th>
                                 <th class="p-4">הודעה</th>
                                 <th class="p-4">סוג</th>
                             </tr>
                         </thead>
-                        <tbody id="notificationsBody">
-                            <!-- Notifications data here -->
-                        </tbody>
+                        <tbody id="notificationsBody"></tbody>
                     </table>
                 </div>
             </div>
@@ -147,19 +139,17 @@
 
         <div id="auditSection" class="hidden">
             <div class="bg-white rounded-xl shadow-sm overflow-hidden">
-                <div class="p-4 bg-slate-50 border-b font-bold">ביקורת פרוטוקול עבודה (Protocol Audit Trail)</div>
+                <div class="p-4 bg-slate-50 border-b font-bold">ביקורת פרוטוקול עבודה</div>
                 <div class="overflow-x-auto">
-                    <table class="w-full text-right border-collapse">
+                    <table class="w-full text-right border-collapse text-sm">
                         <thead>
-                            <tr class="bg-slate-100 text-slate-600 text-sm">
+                            <tr class="bg-slate-100 text-slate-600">
                                 <th class="p-4">זמן</th>
                                 <th class="p-4">סוג אירוע</th>
                                 <th class="p-4">פרטים</th>
                             </tr>
                         </thead>
-                        <tbody id="auditBody">
-                            <!-- Audit logs here -->
-                        </tbody>
+                        <tbody id="auditBody"></tbody>
                     </table>
                 </div>
             </div>
@@ -169,7 +159,7 @@
             <div class="bg-white rounded-xl shadow-sm overflow-hidden">
                 <div class="p-4 bg-slate-50 border-b flex justify-between items-center">
                     <span class="font-bold">ניהול טכנאים ומשתמשים</span>
-                    <button onclick="openTechModal()" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-blue-700 transition">הוסף טכנאי חדש +</button>
+                    <button onclick="openTechModal()" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-blue-700 transition">הוסף טכנאי +</button>
                 </div>
                 <div class="overflow-x-auto">
                     <table class="w-full text-right border-collapse">
@@ -178,15 +168,37 @@
                                 <th class="p-4">מזהה</th>
                                 <th class="p-4">שם הטכנאי</th>
                                 <th class="p-4">טלפון</th>
-                                <th class="p-4">התמחויות</th>
                                 <th class="p-4">עמלה (%)</th>
                                 <th class="p-4">סטטוס</th>
                                 <th class="p-4">פעולות</th>
                             </tr>
                         </thead>
-                        <tbody id="techniciansTableBody">
-                            <!-- Tech users here -->
-                        </tbody>
+                        <tbody id="techniciansTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div id="shiftsSection" class="hidden">
+            <div class="bg-white rounded-xl shadow-sm overflow-hidden">
+                <div class="p-4 bg-slate-50 border-b flex justify-between items-center">
+                    <span class="font-bold">ניהול משמרות</span>
+                    <button onclick="openShiftModal()" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-blue-700 transition">שיבוץ משמרת +</button>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-right border-collapse text-sm">
+                        <thead>
+                            <tr class="bg-slate-100 text-slate-600">
+                                <th class="p-4">מזהה</th>
+                                <th class="p-4">טכנאי</th>
+                                <th class="p-4">סוג</th>
+                                <th class="p-4">התחלה</th>
+                                <th class="p-4">סיום</th>
+                                <th class="p-4">רכב</th>
+                                <th class="p-4">פעולות</th>
+                            </tr>
+                        </thead>
+                        <tbody id="shiftsTableBody"></tbody>
                     </table>
                 </div>
             </div>
@@ -195,25 +207,21 @@
         <div id="customersSection" class="hidden">
             <div class="bg-white rounded-xl shadow-sm overflow-hidden">
                 <div class="p-4 bg-slate-50 border-b flex justify-between items-center">
-                    <span class="font-bold">ניהול לקוחות (End Users)</span>
-                    <button onclick="openCustomerModal()" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-blue-700 transition">הוסף לקוח חדש +</button>
+                    <span class="font-bold">ניהול לקוחות</span>
+                    <button onclick="openCustomerModal()" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-blue-700 transition">הוסף לקוח +</button>
                 </div>
                 <div class="overflow-x-auto">
                     <table class="w-full text-right border-collapse">
                         <thead>
                             <tr class="bg-slate-100 text-slate-600 text-sm">
-                                <th class="p-4">מזהה לקוח</th>
-                                <th class="p-4">שם פרטי</th>
-                                <th class="p-4">שם משפחה</th>
+                                <th class="p-4">מזהה</th>
+                                <th class="p-4">שם</th>
                                 <th class="p-4">טלפון</th>
-                                <th class="p-4">דוא"ל</th>
                                 <th class="p-4">כתובת</th>
                                 <th class="p-4">פעולות</th>
                             </tr>
                         </thead>
-                        <tbody id="customersTableBody">
-                            <!-- Customers here -->
-                        </tbody>
+                        <tbody id="customersTableBody"></tbody>
                     </table>
                 </div>
             </div>
@@ -221,27 +229,37 @@
 
         <div id="financialsSection" class="hidden">
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div class="bg-white rounded-xl shadow-sm overflow-hidden">
-                    <div class="p-4 bg-slate-50 border-b font-bold">סיכום הכנסות ורווחים</div>
-                    <div class="p-6 space-y-4" id="financialSummary">
-                        <!-- Revenue summary cards -->
-                    </div>
+                <div class="bg-white rounded-xl shadow-sm p-6">
+                    <h3 class="font-bold mb-4">סיכום הכנסות</h3>
+                    <div id="financialSummary" class="space-y-4"></div>
                 </div>
                 <div class="bg-white rounded-xl shadow-sm overflow-hidden">
-                    <div class="p-4 bg-slate-50 border-b font-bold">תגמולי טכנאים (Commissions)</div>
-                    <div class="overflow-x-auto">
-                        <table class="w-full text-right border-collapse text-sm">
-                            <thead>
-                                <tr class="bg-slate-100">
-                                    <th class="p-4">טכנאי</th>
-                                    <th class="p-4">מכירות (₪)</th>
-                                    <th class="p-4">עמלה (₪)</th>
-                                    <th class="p-4">סטטוס</th>
-                                </tr>
-                            </thead>
-                            <tbody id="commissionsBody"></tbody>
-                        </table>
-                    </div>
+                    <div class="p-4 bg-slate-50 border-b font-bold">עמלות טכנאים</div>
+                    <tbody id="commissionsBody"></tbody>
+                </div>
+            </div>
+        </div>
+
+        <div id="inventorySection" class="hidden">
+            <div class="bg-white rounded-xl shadow-sm overflow-hidden mb-8">
+                <div class="p-4 bg-slate-50 border-b flex justify-between items-center">
+                    <span class="font-bold">ניהול מלאי וחלפים</span>
+                    <button onclick="openPartModal()" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-blue-700 transition">הוסף פריט +</button>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-right border-collapse">
+                        <thead>
+                            <tr class="bg-slate-100 text-slate-600 text-sm">
+                                <th class="p-4">מזהה</th>
+                                <th class="p-4">שם</th>
+                                <th class="p-4">יצרן</th>
+                                <th class="p-4">מלאי</th>
+                                <th class="p-4">מחיר (₪)</th>
+                                <th class="p-4">פעולות</th>
+                            </tr>
+                        </thead>
+                        <tbody id="inventoryTableBody"></tbody>
+                    </table>
                 </div>
             </div>
         </div>
@@ -249,291 +267,135 @@
         <div id="performanceSection" class="hidden">
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
                 <div class="bg-white p-6 rounded-xl shadow-sm border-t-4 border-indigo-500">
-                    <div class="text-xs text-gray-500 font-bold uppercase">זמן הגעה ממוצע (דקות)</div>
+                    <div class="text-xs text-gray-500 font-bold uppercase">זמן הגעה ממוצע</div>
                     <div id="avgArrivalTime" class="text-3xl font-bold mt-2">--</div>
                 </div>
-                <div class="bg-white p-6 rounded-xl shadow-sm border-t-4 border-pink-500">
-                    <div class="text-xs text-gray-500 font-bold uppercase">יחס המרה (מכירות/קריאות)</div>
-                    <div id="conversionRate" class="text-3xl font-bold mt-2">--</div>
+                <div id="conversionRate" class="bg-white p-6 rounded-xl shadow-sm border-t-4 border-pink-500">
+                    <div class="text-xs text-gray-500 font-bold uppercase">יחס המרה</div>
+                    <div class="text-3xl font-bold mt-2">--</div>
                 </div>
-                <div class="bg-white p-6 rounded-xl shadow-sm border-t-4 border-cyan-500">
-                    <div class="text-xs text-gray-500 font-bold uppercase">מרחק נסיעה יומי ממוצע</div>
-                    <div id="avgDailyKm" class="text-3xl font-bold mt-2">--</div>
-                </div>
+                <div id="priorityChart" class="bg-white p-6 rounded-xl shadow-sm"></div>
             </div>
-
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div class="bg-white rounded-xl shadow-sm overflow-hidden">
-                    <div class="p-4 bg-slate-50 border-b font-bold">דירוג יעילות טכנאים</div>
-                    <div class="overflow-x-auto">
-                        <table class="w-full text-right border-collapse text-sm">
-                            <thead>
-                                <tr class="bg-slate-100">
-                                    <th class="p-4">טכנאי</th>
-                                    <th class="p-4">קריאות</th>
-                                    <th class="p-4">זמן תגובה ממוצע</th>
-                                    <th class="p-4">ציון</th>
-                                </tr>
-                            </thead>
-                            <tbody id="techPerformanceBody"></tbody>
-                        </table>
-                    </div>
-                </div>
-                <div class="bg-white rounded-xl shadow-sm overflow-hidden p-6">
-                    <div class="font-bold mb-4">ניתוח דחיפות קריאות</div>
-                    <div id="priorityChart" class="flex items-end justify-around h-48 pt-10">
-                        <!-- Bar chart elements will be injected here -->
-                    </div>
-                </div>
+            <div class="bg-white rounded-xl shadow-sm overflow-hidden">
+                <div class="p-4 bg-slate-50 border-b font-bold">דירוג יעילות טכנאים</div>
+                <table class="w-full text-right border-collapse text-sm">
+                    <thead><tr class="bg-slate-100"><th>טכנאי</th><th>קריאות</th><th>ציון</th></tr></thead>
+                    <tbody id="techPerformanceBody"></tbody>
+                </table>
             </div>
         </div>
 
-        <!-- Details Modal -->
+        <div id="settingsSection" class="hidden">
+            <div class="bg-white rounded-xl shadow-sm p-6">
+                <h2 class="text-xl font-bold mb-6 border-b pb-4">הגדרות מערכת</h2>
+                <form onsubmit="saveSettings(event)" class="max-w-2xl space-y-6">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="space-y-4">
+                            <h3 class="font-bold text-blue-600 border-b pb-2">תעריפים</h3>
+                            <div><label class="block text-sm">עמלת טכנאי (%)</label><input type="number" step="0.01" id="set_standard_comm" class="w-full border p-2 rounded"></div>
+                            <div><label class="block text-sm">תוספת חירום</label><input type="number" id="set_emer_surcharge" class="w-full border p-2 rounded"></div>
+                        </div>
+                        <div class="space-y-4">
+                            <h3 class="font-bold text-green-600 border-b pb-2">פרוטוקול</h3>
+                            <div class="space-y-2">
+                                <label class="flex items-center"><input type="checkbox" id="set_req_oil" class="ml-2"><span>בדיקת שמן</span></label>
+                                <label class="flex items-center"><input type="checkbox" id="set_req_water" class="ml-2"><span>בדיקת מים</span></label>
+                            </div>
+                        </div>
+                    </div>
+                    <div><label class="block text-sm font-bold">תבנית SMS שיבוץ</label><textarea id="set_sms_assigned" rows="2" class="w-full border p-2 rounded text-sm"></textarea></div>
+                    <div class="flex justify-end"><button type="submit" class="bg-blue-600 text-white font-bold py-2 px-8 rounded-lg">שמור הגדרות</button></div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Modals -->
         <div id="detailsModal" class="hidden fixed inset-0 bg-slate-900/80 backdrop-blur-sm z-50 overflow-y-auto p-4">
             <div class="max-w-2xl mx-auto bg-white rounded-2xl shadow-2xl p-6 mt-10 space-y-6 text-slate-800">
-                <div class="flex justify-between items-center border-b pb-4">
-                    <h2 id="detailTitle" class="text-xl font-bold">פרטי קריאה</h2>
-                    <button onclick="closeDetailsModal()" class="text-slate-400 hover:text-slate-600">✕</button>
-                </div>
-
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div class="space-y-4">
-                        <div>
-                            <h3 class="font-bold text-blue-600 border-b mb-2">מידע כללי</h3>
-                            <div id="generalDetails" class="text-sm space-y-1"></div>
-                        </div>
-                        <div>
-                            <h3 class="font-bold text-green-600 border-b mb-2">פיננסי</h3>
-                            <div id="financialDetails" class="text-sm space-y-1"></div>
-                        </div>
-                        <div>
-                            <h3 class="font-bold text-orange-600 border-b mb-2">מפרט דלת</h3>
-                            <div id="doorDetails" class="text-sm space-y-1"></div>
-                        </div>
-                    </div>
-                    <div class="space-y-4">
-                        <h3 class="font-bold text-slate-600 border-b">תיעוד מהשטח</h3>
-                        <div id="photoDetails" class="grid grid-cols-1 gap-4"></div>
-                    </div>
-                </div>
-
-                <div class="border-t pt-4">
-                    <h3 class="font-bold text-slate-600 mb-2">הערות טכנאי</h3>
-                    <p id="detailNotes" class="text-sm bg-slate-50 p-3 rounded-lg italic"></p>
-                </div>
+                <div class="flex justify-between items-center border-b pb-4"><h2 id="detailTitle" class="text-xl font-bold">פרטי קריאה</h2><button onclick="closeDetailsModal()" class="text-slate-400">✕</button></div>
+                <div id="generalDetails" class="text-sm"></div>
+                <div id="financialDetails" class="text-sm"></div>
+                <div id="doorDetails" class="text-sm"></div>
+                <p id="detailNotes" class="text-sm bg-slate-50 p-3 rounded-lg italic"></p>
             </div>
         </div>
 
-        <!-- Customer Management Modal -->
-        <div id="customerModal" class="hidden fixed inset-0 bg-slate-900/80 backdrop-blur-sm z-50 overflow-y-auto p-4">
-            <div class="max-w-md mx-auto bg-white rounded-2xl shadow-2xl p-6 mt-10 space-y-6 text-slate-800">
-                <div class="flex justify-between items-center border-b pb-4">
-                    <h2 id="customerModalTitle" class="text-xl font-bold">הוספת לקוח חדש</h2>
-                    <button onclick="closeCustomerModal()" class="text-slate-400 hover:text-slate-600">✕</button>
-                </div>
+        <div id="shiftModal" class="hidden fixed inset-0 bg-slate-900/80 backdrop-blur-sm z-50 p-4">
+            <div class="max-w-md mx-auto bg-white rounded-2xl p-6 mt-10 space-y-4">
+                <div class="flex justify-between border-b pb-2"><h2 id="shiftModalTitle" class="font-bold">שיבוץ משמרת</h2><button onclick="closeShiftModal()">✕</button></div>
+                <form onsubmit="saveShift(event)" class="space-y-4">
+                    <input type="hidden" name="shift_id" id="edit_shift_id">
+                    <select name="tech_id" id="edit_shift_tech" class="w-full border p-2 rounded"></select>
+                    <select name="type" id="edit_shift_type" class="w-full border p-2 rounded"><option value="Morning">בוקר</option><option value="Evening">ערב</option></select>
+                    <input type="datetime-local" name="start_time" id="edit_shift_start" class="w-full border p-2 rounded">
+                    <select name="vehicle_id" id="edit_shift_veh" class="w-full border p-2 rounded"></select>
+                    <button type="submit" class="w-full bg-blue-600 text-white p-2 rounded">שמור</button>
+                </form>
+            </div>
+        </div>
 
+        <div id="customerModal" class="hidden fixed inset-0 bg-slate-900/80 backdrop-blur-sm z-50 p-4">
+            <div class="max-w-md mx-auto bg-white rounded-2xl p-6 mt-10 space-y-4">
+                <div class="flex justify-between border-b pb-2"><h2 id="customerModalTitle" class="font-bold">ניהול לקוח</h2><button onclick="closeCustomerModal()">✕</button></div>
                 <form onsubmit="saveCustomer(event)" class="space-y-4">
                     <input type="hidden" name="customer_id" id="edit_cust_id">
-                    <div class="grid grid-cols-2 gap-4">
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700">שם פרטי</label>
-                            <input type="text" name="first_name" id="edit_cust_first" required class="mt-1 block w-full border-gray-300 rounded-md shadow-sm p-2 border">
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700">שם משפחה</label>
-                            <input type="text" name="last_name" id="edit_cust_last" required class="mt-1 block w-full border-gray-300 rounded-md shadow-sm p-2 border">
-                        </div>
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700">טלפון</label>
-                        <input type="tel" name="phone" id="edit_cust_phone" required class="mt-1 block w-full border-gray-300 rounded-md shadow-sm p-2 border">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700">דוא"ל</label>
-                        <input type="email" name="email" id="edit_cust_email" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm p-2 border">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700">כתובת</label>
-                        <input type="text" name="address" id="edit_cust_address" required class="mt-1 block w-full border-gray-300 rounded-md shadow-sm p-2 border">
-                    </div>
-                    <div class="pt-4 flex space-x-2 space-x-reverse">
-                        <button type="submit" class="flex-1 bg-blue-600 text-white font-bold py-2 rounded-lg hover:bg-blue-700 transition">שמור</button>
-                        <button type="button" onclick="closeCustomerModal()" class="flex-1 bg-gray-100 text-gray-700 font-bold py-2 rounded-lg hover:bg-gray-200 transition">ביטול</button>
-                    </div>
+                    <input type="text" name="first_name" id="edit_cust_first" placeholder="שם פרטי" class="w-full border p-2 rounded">
+                    <input type="text" name="last_name" id="edit_cust_last" placeholder="שם משפחה" class="w-full border p-2 rounded">
+                    <input type="tel" name="phone" id="edit_cust_phone" placeholder="טלפון" class="w-full border p-2 rounded">
+                    <input type="text" name="address" id="edit_cust_address" placeholder="כתובת" class="w-full border p-2 rounded">
+                    <button type="submit" class="w-full bg-blue-600 text-white p-2 rounded">שמור</button>
                 </form>
             </div>
         </div>
 
-        <!-- Edit Call Modal -->
-        <div id="editCallModal" class="hidden fixed inset-0 bg-slate-900/80 backdrop-blur-sm z-50 overflow-y-auto p-4">
-            <div class="max-w-md mx-auto bg-white rounded-2xl shadow-2xl p-6 mt-10 space-y-6 text-slate-800">
-                <div class="flex justify-between items-center border-b pb-4">
-                    <h2 class="text-xl font-bold">עריכת קריאה</h2>
-                    <button onclick="closeEditCallModal()" class="text-slate-400 hover:text-slate-600">✕</button>
-                </div>
-
+        <div id="editCallModal" class="hidden fixed inset-0 bg-slate-900/80 backdrop-blur-sm z-50 p-4">
+            <div class="max-w-md mx-auto bg-white rounded-2xl p-6 mt-10 space-y-4">
+                <div class="flex justify-between border-b pb-2"><h2 class="font-bold">עריכת קריאה</h2><button onclick="closeEditCallModal()">✕</button></div>
                 <form onsubmit="saveCallUpdates(event)" class="space-y-4">
                     <input type="hidden" name="call_id" id="edit_call_id">
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700">כתובת</label>
-                        <input type="text" name="address" id="edit_call_address" required class="mt-1 block w-full border-gray-300 rounded-md shadow-sm p-2 border">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700">דחיפות (1-4)</label>
-                        <select name="priority" id="edit_call_priority" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm p-2 border">
-                            <option value="1">P1 - חירום</option>
-                            <option value="2">P2 - גבוהה</option>
-                            <option value="3">P3 - רגילה</option>
-                            <option value="4">P4 - נמוכה</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700">סטטוס</label>
-                        <select name="status" id="edit_call_status" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm p-2 border">
-                            <option value="NEW">חדשה</option>
-                            <option value="ASSIGNED">משובצת</option>
-                            <option value="IN_ROUTE">בדרך</option>
-                            <option value="ARRIVED">במקום</option>
-                            <option value="COMPLETED">הושלמה</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700">הערות</label>
-                        <textarea name="notes" id="edit_call_notes" rows="3" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm p-2 border"></textarea>
-                    </div>
-                    <div class="pt-4 flex space-x-2 space-x-reverse">
-                        <button type="submit" class="flex-1 bg-blue-600 text-white font-bold py-2 rounded-lg hover:bg-blue-700 transition">עדכן קריאה</button>
-                        <button type="button" onclick="closeEditCallModal()" class="flex-1 bg-gray-100 text-gray-700 font-bold py-2 rounded-lg hover:bg-gray-200 transition">ביטול</button>
-                    </div>
+                    <input type="text" name="address" id="edit_call_address" class="w-full border p-2 rounded">
+                    <select name="priority" id="edit_call_priority" class="w-full border p-2 rounded"><option value="1">P1</option><option value="2">P2</option><option value="3">P3</option></select>
+                    <select name="status" id="edit_call_status" class="w-full border p-2 rounded"><option value="NEW">חדשה</option><option value="ASSIGNED">משובצת</option><option value="COMPLETED">הושלמה</option></select>
+                    <button type="submit" class="w-full bg-blue-600 text-white p-2 rounded">עדכן</button>
                 </form>
             </div>
         </div>
 
-        <!-- Customer Management Modal -->
-        <div id="customerModal" class="hidden fixed inset-0 bg-slate-900/80 backdrop-blur-sm z-50 overflow-y-auto p-4">
-            <div class="max-w-md mx-auto bg-white rounded-2xl shadow-2xl p-6 mt-10 space-y-6 text-slate-800">
-                <div class="flex justify-between items-center border-b pb-4">
-                    <h2 id="customerModalTitle" class="text-xl font-bold">הוספת לקוח חדש</h2>
-                    <button onclick="closeCustomerModal()" class="text-slate-400 hover:text-slate-600">✕</button>
-                </div>
-
-                <form onsubmit="saveCustomer(event)" class="space-y-4">
-                    <input type="hidden" name="customer_id" id="edit_cust_id">
-                    <div class="grid grid-cols-2 gap-4">
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700">שם פרטי</label>
-                            <input type="text" name="first_name" id="edit_cust_first" required class="mt-1 block w-full border-gray-300 rounded-md shadow-sm p-2 border">
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700">שם משפחה</label>
-                            <input type="text" name="last_name" id="edit_cust_last" required class="mt-1 block w-full border-gray-300 rounded-md shadow-sm p-2 border">
-                        </div>
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700">טלפון</label>
-                        <input type="tel" name="phone" id="edit_cust_phone" required class="mt-1 block w-full border-gray-300 rounded-md shadow-sm p-2 border">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700">דוא"ל</label>
-                        <input type="email" name="email" id="edit_cust_email" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm p-2 border">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700">כתובת</label>
-                        <input type="text" name="address" id="edit_cust_address" required class="mt-1 block w-full border-gray-300 rounded-md shadow-sm p-2 border">
-                    </div>
-                    <div class="pt-4 flex space-x-2 space-x-reverse">
-                        <button type="submit" class="flex-1 bg-blue-600 text-white font-bold py-2 rounded-lg hover:bg-blue-700 transition">שמור</button>
-                        <button type="button" onclick="closeCustomerModal()" class="flex-1 bg-gray-100 text-gray-700 font-bold py-2 rounded-lg hover:bg-gray-200 transition">ביטול</button>
-                    </div>
+        <div id="fleetModal" class="hidden fixed inset-0 bg-slate-900/80 backdrop-blur-sm z-50 p-4">
+            <div class="max-w-md mx-auto bg-white rounded-2xl p-6 mt-10 space-y-4">
+                <div class="flex justify-between border-b pb-2"><h2 id="fleetModalTitle" class="font-bold">ניהול רכב</h2><button onclick="closeFleetModal()">✕</button></div>
+                <form onsubmit="saveVehicle(event)" class="space-y-4">
+                    <input type="hidden" name="vehicle_id" id="edit_veh_id">
+                    <input type="text" name="license_plate" id="edit_veh_plate" placeholder="מספר רישוי" class="w-full border p-2 rounded">
+                    <input type="number" name="weekly_odometer" id="edit_veh_odo" placeholder="קילומטראז'" class="w-full border p-2 rounded">
+                    <select name="status" id="edit_veh_status" class="w-full border p-2 rounded"><option value="Active">פעיל</option><option value="Maintenance">בטיפול</option></select>
+                    <button type="submit" class="w-full bg-blue-600 text-white p-2 rounded">שמור</button>
                 </form>
             </div>
         </div>
 
-        <!-- Edit Call Modal -->
-        <div id="editCallModal" class="hidden fixed inset-0 bg-slate-900/80 backdrop-blur-sm z-50 overflow-y-auto p-4">
-            <div class="max-w-md mx-auto bg-white rounded-2xl shadow-2xl p-6 mt-10 space-y-6 text-slate-800">
-                <div class="flex justify-between items-center border-b pb-4">
-                    <h2 class="text-xl font-bold">עריכת קריאה</h2>
-                    <button onclick="closeEditCallModal()" class="text-slate-400 hover:text-slate-600">✕</button>
-                </div>
-
-                <form onsubmit="saveCallUpdates(event)" class="space-y-4">
-                    <input type="hidden" name="call_id" id="edit_call_id">
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700">כתובת</label>
-                        <input type="text" name="address" id="edit_call_address" required class="mt-1 block w-full border-gray-300 rounded-md shadow-sm p-2 border">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700">דחיפות (1-4)</label>
-                        <select name="priority" id="edit_call_priority" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm p-2 border">
-                            <option value="1">P1 - חירום</option>
-                            <option value="2">P2 - גבוהה</option>
-                            <option value="3">P3 - רגילה</option>
-                            <option value="4">P4 - נמוכה</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700">סטטוס</label>
-                        <select name="status" id="edit_call_status" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm p-2 border">
-                            <option value="NEW">חדשה</option>
-                            <option value="ASSIGNED">משובצת</option>
-                            <option value="IN_ROUTE">בדרך</option>
-                            <option value="ARRIVED">במקום</option>
-                            <option value="COMPLETED">הושלמה</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700">הערות</label>
-                        <textarea name="notes" id="edit_call_notes" rows="3" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm p-2 border"></textarea>
-                    </div>
-                    <div class="pt-4 flex space-x-2 space-x-reverse">
-                        <button type="submit" class="flex-1 bg-blue-600 text-white font-bold py-2 rounded-lg hover:bg-blue-700 transition">עדכן קריאה</button>
-                        <button type="button" onclick="closeEditCallModal()" class="flex-1 bg-gray-100 text-gray-700 font-bold py-2 rounded-lg hover:bg-gray-200 transition">ביטול</button>
-                    </div>
+        <div id="partModal" class="hidden fixed inset-0 bg-slate-900/80 backdrop-blur-sm z-50 p-4">
+            <div class="max-w-md mx-auto bg-white rounded-2xl p-6 mt-10 space-y-4">
+                <div class="flex justify-between border-b pb-2"><h2 id="partModalTitle" class="font-bold">ניהול פריט</h2><button onclick="closePartModal()">✕</button></div>
+                <form onsubmit="savePart(event)" class="space-y-4">
+                    <input type="hidden" name="part_id" id="edit_part_id">
+                    <input type="text" name="name" id="edit_part_name" placeholder="שם הפריט" class="w-full border p-2 rounded">
+                    <input type="number" name="stock_level" id="edit_part_stock" placeholder="כמות במלאי" class="w-full border p-2 rounded">
+                    <input type="number" step="0.01" name="price" id="edit_part_price" placeholder="מחיר" class="w-full border p-2 rounded">
+                    <button type="submit" class="w-full bg-blue-600 text-white p-2 rounded">שמור</button>
                 </form>
             </div>
         </div>
 
-        <!-- Technician Management Modal -->
-        <div id="techModal" class="hidden fixed inset-0 bg-slate-900/80 backdrop-blur-sm z-50 overflow-y-auto p-4">
-            <div class="max-w-md mx-auto bg-white rounded-2xl shadow-2xl p-6 mt-10 space-y-6 text-slate-800">
-                <div class="flex justify-between items-center border-b pb-4">
-                    <h2 id="techModalTitle" class="text-xl font-bold">הוספת טכנאי חדש</h2>
-                    <button onclick="closeTechModal()" class="text-slate-400 hover:text-slate-600">✕</button>
-                </div>
-
+        <div id="techModal" class="hidden fixed inset-0 bg-slate-900/80 backdrop-blur-sm z-50 p-4">
+            <div class="max-w-md mx-auto bg-white rounded-2xl p-6 mt-10 space-y-4">
+                <div class="flex justify-between border-b pb-2"><h2 id="techModalTitle" class="font-bold">ניהול טכנאי</h2><button onclick="closeTechModal()">✕</button></div>
                 <form onsubmit="saveTechnician(event)" class="space-y-4">
                     <input type="hidden" name="tech_id" id="edit_tech_id">
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700">שם מלא</label>
-                        <input type="text" name="name" id="edit_tech_name" required class="mt-1 block w-full border-gray-300 rounded-md shadow-sm p-2 border">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700">טלפון</label>
-                        <input type="tel" name="phone" id="edit_tech_phone" required class="mt-1 block w-full border-gray-300 rounded-md shadow-sm p-2 border">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700">התמחויות (מופרד בפסיקים)</label>
-                        <input type="text" name="specialties" id="edit_tech_specialties" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm p-2 border" placeholder="Overhead, Roll-up, Gates">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700">עמלה (0.1 = 10%)</label>
-                        <input type="number" step="0.01" name="commission_rate" id="edit_tech_commission" required class="mt-1 block w-full border-gray-300 rounded-md shadow-sm p-2 border">
-                    </div>
-                    <div class="grid grid-cols-2 gap-4">
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700">קו רוחב (Home Lat)</label>
-                            <input type="number" step="any" name="home_lat" id="edit_tech_lat" required class="mt-1 block w-full border-gray-300 rounded-md shadow-sm p-2 border">
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700">קו אורך (Home Lng)</label>
-                            <input type="number" step="any" name="home_lng" id="edit_tech_lng" required class="mt-1 block w-full border-gray-300 rounded-md shadow-sm p-2 border">
-                        </div>
-                    </div>
-                    <div class="pt-4 flex space-x-2 space-x-reverse">
-                        <button type="submit" class="flex-1 bg-blue-600 text-white font-bold py-2 rounded-lg hover:bg-blue-700 transition">שמור</button>
-                        <button type="button" onclick="closeTechModal()" class="flex-1 bg-gray-100 text-gray-700 font-bold py-2 rounded-lg hover:bg-gray-200 transition">ביטול</button>
-                    </div>
+                    <input type="text" name="name" id="edit_tech_name" placeholder="שם מלא" class="w-full border p-2 rounded">
+                    <input type="tel" name="phone" id="edit_tech_phone" placeholder="טלפון" class="w-full border p-2 rounded">
+                    <input type="number" step="0.01" name="commission_rate" id="edit_tech_commission" placeholder="עמלה (0.1)" class="w-full border p-2 rounded">
+                    <button type="submit" class="w-full bg-blue-600 text-white p-2 rounded">שמור</button>
                 </form>
             </div>
         </div>
@@ -541,798 +403,297 @@
 
     <script>
         const API_URL = "http://localhost:3000/api/action";
-        let technicians = [];
-        let calls = [];
-        let fleet = [];
-        let notifications = [];
-        let auditLogs = [];
+        let technicians = [], calls = [], fleet = [], notifications = [], auditLogs = [], customers = [], inventory = [], shifts = [], settings = {};
         let map, markers = [];
 
         function switchTab(tab) {
-            const sections = [
-                'callsSection', 'fleetSection', 'notificationsSection', 'auditSection', 
-                'techniciansSection', 'customersSection', 'financialsSection', 
-                'inventorySection', 'performanceSection'
-            ];
-            sections.forEach(s => {
-                const el = document.getElementById(s);
-                if (el) el.classList.add('hidden');
-            });
-            
-            document.querySelectorAll('.flex.space-x-4 button').forEach(btn => {
-                btn.className = "px-6 py-2 font-bold text-gray-500 border-b-2 border-transparent hover:text-blue-600 transition";
-            });
+            const sections = ['callsSection', 'fleetSection', 'notificationsSection', 'auditSection', 'techniciansSection', 'shiftsSection', 'customersSection', 'financialsSection', 'inventorySection', 'performanceSection', 'settingsSection'];
+            sections.forEach(s => { const el = document.getElementById(s); if (el) el.classList.add('hidden'); });
+            document.querySelectorAll('.flex button').forEach(btn => btn.className = "px-4 py-2 font-bold text-gray-500 border-b-2 border-transparent hover:text-blue-600 transition");
+            const activeTab = document.getElementById('tab' + tab.charAt(0).toUpperCase() + tab.slice(1));
+            if (activeTab) activeTab.className = "px-4 py-2 font-bold border-b-2 border-blue-600 text-blue-600 transition";
+            const target = document.getElementById(tab + 'Section');
+            if (target) target.classList.remove('hidden');
+            renderSection(tab);
+        }
 
-            const activeTabId = 'tab' + tab.charAt(0).toUpperCase() + tab.slice(1);
-            const activeTab = document.getElementById(activeTabId);
-            if (activeTab) {
-                activeTab.className = "px-6 py-2 font-bold border-b-2 border-blue-600 text-blue-600 transition";
-            }
-
-            const targetSectionId = tab + 'Section';
-            const targetSection = document.getElementById(targetSectionId);
-            if (targetSection) {
-                targetSection.classList.remove('hidden');
-            }
-
-            // Trigger specific renders if needed
-            if (tab === 'fleet') renderFleetList();
+        function renderSection(tab) {
+            if (tab === 'fleet') renderFleet();
             if (tab === 'notifications') renderNotifications();
-            if (tab === 'audit') renderAuditLogs();
+            if (tab === 'audit') renderAudit();
+            if (tab === 'technicians') renderTechs();
+            if (tab === 'shifts') renderShifts();
+            if (tab === 'customers') renderCustomers();
             if (tab === 'financials') renderFinancials();
             if (tab === 'inventory') renderInventory();
             if (tab === 'performance') renderPerformance();
-            if (tab === 'technicians') renderTechniciansTable();
-            if (tab === 'customers') renderCustomersTable();
-        }
-
-        function renderNotifications() {
-            const body = document.getElementById('notificationsBody');
-            if (!body) return;
-            body.innerHTML = notifications.map(n => `
-                <tr class="border-b hover:bg-slate-50 transition">
-                    <td class="p-4 text-xs">${new Date(n.timestamp).toLocaleString('he-IL')}</td>
-                    <td class="p-4 font-bold text-sm">${n.recipient}</td>
-                    <td class="p-4 text-sm">${n.message}</td>
-                    <td class="p-4"><span class="px-2 py-1 rounded text-[10px] bg-blue-100 text-blue-700 font-bold">${n.type}</span></td>
-                </tr>
-            `).join('') || '<tr><td colspan="4" class="p-8 text-center text-gray-400">אין הודעות ביומן</td></tr>';
-        }
-
-        function renderAuditLogs() {
-            const body = document.getElementById('auditBody');
-            if (!body) return;
-            body.innerHTML = auditLogs.map(log => `
-                <tr class="border-b hover:bg-slate-50 transition">
-                    <td class="p-4 text-xs">${new Date(log.timestamp).toLocaleString('he-IL')}</td>
-                    <td class="p-4 font-bold text-sm text-blue-600">${log.action}</td>
-                    <td class="p-4 text-sm italic">${log.details}</td>
-                </tr>
-            `).join('') || '<tr><td colspan="3" class="p-8 text-center text-gray-400">אין יומן ביקורת זמין</td></tr>';
+            if (tab === 'settings') renderSettings();
         }
 
         async function loadData() {
             try {
-                const response = await fetch(API_URL, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ action: 'GET_ALL_DATA' })
-                });
-                const result = await response.json();
-                if (result.status === "success") {
-                    technicians = result.technicians;
-                    calls = result.calls; 
-                    notifications = result.notifications || [];
-                    auditLogs = result.assignments_log || [];
-                    fleet = result.fleet || [];
-                    customers = result.customers || []; // Ensure customers are loaded
-                    renderKPIs();
-                    renderTechList();
-                    renderCallsTable();
-                    renderNotifications();
-                    renderAuditLogs();
-                    renderFinancials();
-                    renderInventory();
-                    renderPerformance();
-                    renderTechniciansTable();
-                    renderCustomersTable();
-                    updateMap();
-                    document.getElementById('lastUpdate').textContent = `עדכון אחרון: ${new Date().toLocaleTimeString('he-IL')}`;
+                const response = await fetch(API_URL, { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({action:'GET_ALL_DATA'}) });
+                const r = await response.json();
+                if (r.status === "success") {
+                    technicians = r.technicians || []; calls = r.calls || []; fleet = r.fleet || []; notifications = r.notifications || [];
+                    auditLogs = r.assignments_log || []; customers = r.customers || []; inventory = r.inventory || []; shifts = r.shifts || []; settings = r.settings || {};
+                    renderKPIs(); renderTechList(); renderCalls(); updateMap();
+                    document.getElementById('lastUpdate').textContent = `עדכון: ${new Date().toLocaleTimeString('he-IL')}`;
                 }
-            } catch (e) {
-                console.error(e);
-            }
-        }
-
-        function renderCustomersTable() {
-            const body = document.getElementById('customersTableBody');
-            if (!body) return;
-            body.innerHTML = (customers || []).map(c => `
-                <tr class="border-b hover:bg-slate-50 transition">
-                    <td class="p-4 font-mono text-xs">${c.customer_id}</td>
-                    <td class="p-4 font-bold text-sm">${c.first_name}</td>
-                    <td class="p-4 font-bold text-sm">${c.last_name}</td>
-                    <td class="p-4 text-sm">${c.phone}</td>
-                    <td class="p-4 text-sm">${c.email || '-'}</td>
-                    <td class="p-4 text-xs text-gray-500">${c.address}</td>
-                    <td class="p-4 space-x-2 space-x-reverse">
-                        <button onclick="editCustomer('${c.customer_id}')" class="text-blue-600 hover:underline text-xs">ערוך</button>
-                        <button onclick="deleteCustomer('${c.customer_id}')" class="text-red-600 hover:underline text-xs">מחק</button>
-                    </td>
-                </tr>
-            `).join('');
-        }
-
-        function openCustomerModal(customerId = null) {
-            const customer = customerId ? customers.find(c => c.customer_id === customerId) : {
-                customer_id: "", first_name: "", last_name: "", phone: "", email: "", address: ""
-            };
-
-            document.getElementById('customerModalTitle').textContent = customerId ? "עריכת לקוח" : "הוספת לקוח חדש";
-            document.getElementById('edit_cust_id').value = customer.customer_id;
-            document.getElementById('edit_cust_first').value = customer.first_name;
-            document.getElementById('edit_cust_last').value = customer.last_name;
-            document.getElementById('edit_cust_phone').value = customer.phone;
-            document.getElementById('edit_cust_email').value = customer.email;
-            document.getElementById('edit_cust_address').value = customer.address;
-
-            document.getElementById('customerModal').classList.remove('hidden');
-        }
-
-        function closeCustomerModal() {
-            document.getElementById('customerModal').classList.add('hidden');
-        }
-
-        async function saveCustomer(e) {
-            e.preventDefault();
-            const formData = new FormData(e.target);
-            const custData = Object.fromEntries(formData.entries());
-            if (!custData.customer_id) delete custData.customer_id;
-
-            try {
-                const response = await fetch(API_URL, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ action: 'SAVE_CUSTOMER', customer: custData })
-                });
-                const result = await response.json();
-                if (result.status === "success") {
-                    closeCustomerModal();
-                    loadData();
-                }
-            } catch (e) { console.error(e); }
-        }
-
-        function editCustomer(id) { openCustomerModal(id); }
-
-        async function deleteCustomer(id) {
-            if (!confirm("האם למחוק לקוח זה?")) return;
-            try {
-                await fetch(API_URL, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ action: 'DELETE_CUSTOMER', customer_id: id })
-                });
-                loadData();
-            } catch (e) { console.error(e); }
-        }
-
-        function openEditCallModal(callId) {
-            const call = calls.find(c => c.call_id === callId);
-            if (!call) return;
-
-            document.getElementById('edit_call_id').value = call.call_id;
-            document.getElementById('edit_call_address').value = call.address;
-            document.getElementById('edit_call_priority').value = call.priority;
-            document.getElementById('edit_call_notes').value = call.notes || "";
-            document.getElementById('edit_call_status').value = call.status;
-
-            document.getElementById('editCallModal').classList.remove('hidden');
-        }
-
-        function closeEditCallModal() {
-            document.getElementById('editCallModal').classList.add('hidden');
-        }
-
-        async function saveCallUpdates(e) {
-            e.preventDefault();
-            const formData = new FormData(e.target);
-            const callUpdates = Object.fromEntries(formData.entries());
-            
-            const originalCall = calls.find(c => c.call_id === callUpdates.call_id);
-            const updatedCall = { ...originalCall, ...callUpdates };
-            updatedCall.priority = parseInt(updatedCall.priority);
-
-            try {
-                const response = await fetch(API_URL, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ action: 'SAVE_CALL', call: updatedCall })
-                });
-                const result = await response.json();
-                if (result.status === "success") {
-                    closeEditCallModal();
-                    loadData();
-                }
-            } catch (e) { console.error(e); }
-        }
-
-        function renderCallsTable() {
-            const body = document.getElementById('callsBody');
-            body.innerHTML = calls.map(call => {
-                // Calculate proximity for each technician relative to this call
-                const sortedTechs = technicians.map(t => {
-                    const dist = (call.lat && call.lng && t.current_lat && t.current_lng)
-                        ? haversineDistance(call.lat, call.lng, t.current_lat, t.current_lng)
-                        : Infinity;
-                    return { ...t, distance: dist };
-                }).sort((a, b) => a.distance - b.distance);
-
-                return `
-                <tr class="border-b hover:bg-slate-50 transition">
-                    <td class="p-4 font-mono text-[10px]">${call.call_id}</td>
-                    <td class="p-4 font-bold text-sm">${call.issue_type || '-'}</td>
-                    <td class="p-4 text-xs">${call.address}</td>
-                    <td class="p-4"><span class="px-2 py-1 rounded text-[10px] font-bold ${getUrgencyClass(call.priority)}">P${call.priority}</span></td>
-                    <td class="p-4">
-                        <div class="relative group">
-                            <select onchange="manualAssign('${call.call_id}', this.value)" 
-                                    onfocus="fetchSmartRecommendations('${call.call_id}', this)"
-                                    class="text-xs border rounded p-1 max-w-[150px] pr-6 bg-white appearance-none">
-                                <option value="">בחר טכנאי...</option>
-                                ${sortedTechs.map(t => `
-                                    <option value="${t.name}" ${call.assigned_technician === t.name ? 'selected' : ''}>
-                                        ${t.name}
-                                    </option>
-                                `).join('')}
-                            </select>
-                            <div class="absolute left-2 top-2 pointer-events-none">✨</div>
-                        </div>
-                    </td>
-                    <td class="p-4">
-                        <input type="text" value="${call.eta || ''}" 
-                               onblur="updateETA('${call.call_id}', this.value)" 
-                               placeholder="30m" 
-                               class="text-xs border rounded p-1 w-12">
-                    </td>
-                    <td class="p-4 font-bold text-xs">₪${call.total_amount || 0}</td>
-                    <td class="p-4"><span class="text-[10px] font-bold ${getStatusColor(call.status)}">${translateStatus(call.status)}</span></td>
-                    <td class="p-4 space-x-2 space-x-reverse">
-                        <button onclick="openDetailsModal('${call.call_id}')" class="text-blue-600 hover:underline text-xs">פרטים</button>
-                        <button onclick="openEditCallModal('${call.call_id}')" class="text-orange-600 hover:underline text-xs">ערוך</button>
-                    </td>
-                </tr>
-            `;}).join('');
-        }
-
-        function renderTechniciansTable() {
-            const body = document.getElementById('techniciansTableBody');
-            if (!body) return;
-            body.innerHTML = technicians.map(t => `
-                <tr class="border-b hover:bg-slate-50 transition">
-                    <td class="p-4 font-mono text-xs">${t.tech_id}</td>
-                    <td class="p-4 font-bold text-sm">${t.name}</td>
-                    <td class="p-4 text-sm">${t.phone}</td>
-                    <td class="p-4 text-xs text-gray-500">${t.specialties || '-'}</td>
-                    <td class="p-4 text-sm font-bold text-blue-600">${(t.commission_rate * 100).toFixed(0)}%</td>
-                    <td class="p-4">
-                        <span class="px-2 py-1 rounded-full text-[10px] font-bold ${t.is_active ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}">
-                            ${t.is_active ? 'פעיל' : 'לא פעיל'}
-                        </span>
-                    </td>
-                    <td class="p-4 space-x-2 space-x-reverse">
-                        <button onclick="editTech('${t.tech_id}')" class="text-blue-600 hover:underline text-xs">ערוך</button>
-                        <button onclick="deleteTech('${t.tech_id}')" class="text-red-600 hover:underline text-xs">מחק</button>
-                    </td>
-                </tr>
-            `).join('');
-        }
-
-        function openTechModal(techId = null) {
-            const tech = techId ? technicians.find(t => t.tech_id === techId) : {
-                tech_id: "", name: "", phone: "", specialties: "", commission_rate: 0.1, home_lat: 32.0853, home_lng: 34.7818
-            };
-
-            document.getElementById('techModalTitle').textContent = techId ? "עריכת טכנאי" : "הוספת טכנאי חדש";
-            document.getElementById('edit_tech_id').value = tech.tech_id;
-            document.getElementById('edit_tech_name').value = tech.name;
-            document.getElementById('edit_tech_phone').value = tech.phone;
-            document.getElementById('edit_tech_specialties').value = tech.specialties || "";
-            document.getElementById('edit_tech_commission').value = tech.commission_rate;
-            document.getElementById('edit_tech_lat').value = tech.home_lat;
-            document.getElementById('edit_tech_lng').value = tech.home_lng;
-
-            document.getElementById('techModal').classList.remove('hidden');
-        }
-
-        function closeTechModal() {
-            document.getElementById('techModal').classList.add('hidden');
-        }
-
-        async function saveTechnician(e) {
-            e.preventDefault();
-            const formData = new FormData(e.target);
-            const techData = Object.fromEntries(formData.entries());
-            
-            // Convert types
-            techData.commission_rate = parseFloat(techData.commission_rate);
-            techData.home_lat = parseFloat(techData.home_lat);
-            techData.home_lng = parseFloat(techData.home_lng);
-            if (!techData.tech_id) delete techData.tech_id;
-
-            try {
-                const response = await fetch(API_URL, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ action: 'SAVE_TECHNICIAN', technician: techData })
-                });
-                const result = await response.json();
-                if (result.status === "success") {
-                    closeTechModal();
-                    loadData();
-                } else {
-                    alert("שגיאה בשמירת הטכנאי: " + result.message);
-                }
-            } catch (e) {
-                console.error(e);
-                alert("שגיאה בתקשורת עם השרת");
-            }
-        }
-
-        function editTech(techId) {
-            openTechModal(techId);
-        }
-
-        async function deleteTech(techId) {
-            if (!confirm("האם אתה בטוח שברצונך למחוק טכנאי זה?")) return;
-            try {
-                const response = await fetch(API_URL, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ action: 'DELETE_TECHNICIAN', tech_id: techId })
-                });
-                const result = await response.json();
-                if (result.status === "success") {
-                    loadData();
-                }
-            } catch (e) {
-                console.error(e);
-            }
-        }
-
-        function renderPerformance() {
-            const completedCalls = calls.filter(c => c.status === 'COMPLETED' && c.created_at);
-            
-            // 1. Avg Arrival Time
-            let totalArrivalMins = 0;
-            let arrivalCount = 0;
-            calls.forEach(c => {
-                const arrivalLog = auditLogs.find(l => l.details && l.details.includes('arrived') && l.details.includes(c.call_id));
-                if (arrivalLog && c.created_at) {
-                    const diff = (new Date(arrivalLog.timestamp) - new Date(c.created_at)) / 60000;
-                    if (diff > 0 && diff < 300) {
-                        totalArrivalMins += diff;
-                        arrivalCount++;
-                    }
-                }
-            });
-            document.getElementById('avgArrivalTime').textContent = arrivalCount > 0 ? Math.round(totalArrivalMins / arrivalCount) : '--';
-
-            // 2. Conversion Rate
-            const salesCalls = calls.filter(c => c.issue_type === 'New Door' || c.total_amount > 1000);
-            const converted = salesCalls.filter(c => c.status === 'COMPLETED').length;
-            document.getElementById('conversionRate').textContent = salesCalls.length > 0 ? `${Math.round((converted / salesCalls.length) * 100)}%` : '--';
-
-            // 3. Tech Ranking
-            const techBody = document.getElementById('techPerformanceBody');
-            if (techBody) {
-                techBody.innerHTML = technicians.map(t => {
-                    const techCalls = calls.filter(c => c.assigned_technician === t.name);
-                    const completed = techCalls.filter(c => c.status === 'COMPLETED').length;
-                    const rating = (completed * 10) + (t.rating * 5); // Simple score
-                    return `
-                        <tr class="border-b">
-                            <td class="p-4 font-bold">${t.name}</td>
-                            <td class="p-4">${techCalls.length} (${completed})</td>
-                            <td class="p-4">${arrivalCount > 0 ? 'מעולה' : '-'}</td>
-                            <td class="p-4"><span class="bg-indigo-100 text-indigo-700 px-2 py-1 rounded font-bold">${Math.round(rating)}</span></td>
-                        </tr>
-                    `;
-                }).join('');
-            }
-
-            // 4. Priority Chart
-            const pChart = document.getElementById('priorityChart');
-            if (pChart) {
-                const counts = [1, 2, 3, 4].map(p => calls.filter(c => parseInt(c.priority) === p).length);
-                const max = Math.max(...counts, 1);
-                pChart.innerHTML = counts.map((count, i) => `
-                    <div class="flex flex-col items-center group relative">
-                        <div class="bg-blue-500 w-8 transition-all duration-500" style="height: ${(count/max)*100}px"></div>
-                        <span class="text-[10px] mt-2 font-bold text-slate-500">P${i+1}</span>
-                        <div class="absolute -top-6 hidden group-hover:block bg-slate-800 text-white text-[10px] px-2 py-1 rounded">${count} קריאות</div>
-                    </div>
-                `).join('');
-            }
-        }
-
-        function renderFinancials() {
-            const completedCalls = calls.filter(c => c.status === 'COMPLETED');
-            const totalRevenue = completedCalls.reduce((sum, c) => sum + (parseFloat(c.total_amount) || 0), 0);
-            const totalDeposits = completedCalls.reduce((sum, c) => sum + (parseFloat(c.deposit_paid) || 0), 0);
-            const totalSurcharges = completedCalls.reduce((sum, c) => sum + (parseFloat(c.surcharge_amount) || 0), 0);
-
-            const summary = document.getElementById('financialSummary');
-            if (summary) {
-                summary.innerHTML = `
-                    <div class="grid grid-cols-1 gap-4">
-                        <div class="bg-blue-50 p-4 rounded-lg border border-blue-100">
-                            <div class="text-xs text-blue-600 font-bold mb-1">סה"כ הכנסות ברוטו</div>
-                            <div class="text-2xl font-bold">₪${totalRevenue.toLocaleString()}</div>
-                        </div>
-                        <div class="bg-green-50 p-4 rounded-lg border border-green-100">
-                            <div class="text-xs text-green-600 font-bold mb-1">מקדמות שנגבו</div>
-                            <div class="text-2xl font-bold">₪${totalDeposits.toLocaleString()}</div>
-                        </div>
-                        <div class="bg-orange-50 p-4 rounded-lg border border-orange-100">
-                            <div class="text-xs text-orange-600 font-bold mb-1">הכנסות מתוספות (חירום/לילה)</div>
-                            <div class="text-2xl font-bold">₪${totalSurcharges.toLocaleString()}</div>
-                        </div>
-                    </div>
-                `;
-            }
-
-            const commBody = document.getElementById('commissionsBody');
-            if (commBody) {
-                commBody.innerHTML = technicians.map(t => {
-                    const techCalls = completedCalls.filter(c => c.assigned_technician === t.name);
-                    const techSales = techCalls.reduce((sum, c) => sum + (parseFloat(c.total_amount) || 0), 0);
-                    const commission = techSales * (t.commission_rate || 0.1);
-                    return `
-                        <tr class="border-b">
-                            <td class="p-4 font-bold">${t.name}</td>
-                            <td class="p-4">₪${techSales.toLocaleString()}</td>
-                            <td class="p-4 text-blue-600 font-bold">₪${commission.toLocaleString()}</td>
-                            <td class="p-4"><span class="px-2 py-1 rounded text-[10px] bg-slate-100">ממתין לתשלום</span></td>
-                        </tr>
-                    `;
-                }).join('');
-            }
-        }
-
-        function renderInventory() {
-            const manufacturerCounts = {};
-            const activeAlerts = [];
-
-            calls.forEach(c => {
-                let specs = {};
-                try { specs = typeof c.door_specs === 'string' ? JSON.parse(c.door_specs) : c.door_specs; } catch(e) {}
-                
-                if (specs && specs.manufacturer) {
-                    manufacturerCounts[specs.manufacturer] = (manufacturerCounts[specs.manufacturer] || 0) + 1;
-                }
-                
-                if (specs && specs.warehouse_alert) {
-                    activeAlerts.push({
-                        call_id: c.call_id,
-                        address: c.address,
-                        notes: c.notes,
-                        specs: specs
-                    });
-                }
-            });
-
-            const invBody = document.getElementById('inventoryByManufacturer');
-            if (invBody) {
-                invBody.innerHTML = Object.entries(manufacturerCounts).map(([m, count]) => `
-                    <div class="flex justify-between items-center p-3 border-b">
-                        <span class="font-bold">${m}</span>
-                        <span class="bg-blue-100 text-blue-700 px-3 py-1 rounded-full text-xs font-bold">${count} התקנות/תיקונים</span>
-                    </div>
-                `).join('') || '<div class="text-center p-8 text-gray-400 text-sm">אין נתוני יצרנים זמינים</div>';
-            }
-
-            const alertsBody = document.getElementById('warehouseAlertsBody');
-            if (alertsBody) {
-                alertsBody.innerHTML = activeAlerts.map(a => `
-                    <tr class="border-b bg-orange-50/30">
-                        <td class="p-4 font-bold text-xs">${a.call_id}</td>
-                        <td class="p-4 text-xs">${a.address}</td>
-                        <td class="p-4 text-xs font-bold text-orange-700">יצרן: ${a.specs.manufacturer || '-'} | Bottom Panel: ${a.specs.bottom_panel ? 'כן' : 'לא'}</td>
-                    </tr>
-                `).join('') || '<tr><td colspan="3" class="p-8 text-center text-gray-400 text-sm">אין התראות מלאי פעילות</td></tr>';
-            }
-        }
-
-        function renderFleetList() {
-            const body = document.getElementById('fleetBody');
-            if (!body) return;
-            body.innerHTML = fleet.map(v => `
-                <tr class="border-b hover:bg-slate-50 transition">
-                    <td class="p-4 font-bold">${v.vehicle_id}</td>
-                    <td class="p-4">${v.license_plate}</td>
-                    <td class="p-4 font-mono">${v.weekly_odometer} ק"מ</td>
-                    <td class="p-4 text-xs">${new Date(v.last_oil_check).toLocaleDateString('he-IL')}</td>
-                    <td class="p-4 text-xs">${new Date(v.last_water_check).toLocaleDateString('he-IL')}</td>
-                    <td class="p-4"><span class="px-2 py-1 rounded text-[10px] font-bold ${v.status === 'Active' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}">${v.status}</span></td>
-                </tr>
-            `).join('');
-        }
-
-        function openDetailsModal(callId) {
-            const call = calls.find(c => c.call_id === callId);
-            if (!call) return;
-
-            document.getElementById('detailTitle').textContent = `קריאה #${call.call_id} - ${call.issue_type}`;
-            
-            document.getElementById('generalDetails').innerHTML = `
-                <p><b>כתובת:</b> ${call.address}</p>
-                <p><b>זמן פתיחה:</b> ${new Date(call.created_at).toLocaleString('he-IL')}</p>
-                <p><b>טכנאי:</b> ${call.assigned_technician || 'לא שובץ'}</p>
-            `;
-
-            document.getElementById('financialDetails').innerHTML = `
-                <p><b>סה"כ לתשלום:</b> ₪${call.total_amount || 0}</p>
-                <p><b>מקדמה שנגבתה:</b> ₪${call.deposit_paid || 0}</p>
-                <p><b>תוספת (חירום/לילה):</b> ₪${call.surcharge_amount || 0}</p>
-            `;
-
-            let specs = {};
-            try { specs = typeof call.door_specs === 'string' ? JSON.parse(call.door_specs) : call.door_specs; } catch(e) {}
-            
-            document.getElementById('doorDetails').innerHTML = `
-                <p><b>יצרן:</b> ${specs.manufacturer || '-'}</p>
-                <p><b>Trim:</b> ${specs.trim || '-'}</p>
-                <p><b>Struts:</b> ${specs.struts || '-'}</p>
-                <p><b>Bottom Panel:</b> ${specs.bottom_panel ? 'כן' : 'לא'}</p>
-                <p class="${specs.warehouse_alert ? 'text-red-600 font-bold' : ''}"><b>התראת מחסן:</b> ${specs.warehouse_alert ? 'כן ⚠️' : 'לא'}</p>
-            `;
-
-            document.getElementById('photoDetails').innerHTML = `
-                ${call.before_photo ? `<div><p class="text-[10px] mb-1">לפני:</p><img src="${call.before_photo}" class="rounded border h-32 w-full object-cover"></div>` : ''}
-                ${call.after_photo ? `<div><p class="text-[10px] mb-1">אחרי:</p><img src="${call.after_photo}" class="rounded border h-32 w-full object-cover"></div>` : ''}
-            `;
-
-            document.getElementById('detailNotes').textContent = call.notes || 'אין הערות';
-            document.getElementById('detailsModal').classList.remove('hidden');
-        }
-
-        function closeDetailsModal() {
-            document.getElementById('detailsModal').classList.add('hidden');
-        }
-
-        // Initialize Map
-        function initMap() {
-            map = L.map('map').setView([32.0853, 34.7818], 10); // Center on Israel
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                attribution: '© OpenStreetMap contributors'
-            }).addTo(map);
+            } catch(e) { console.error(e); }
         }
 
         function renderKPIs() {
-            document.getElementById('kpiNew').textContent = calls.filter(c => c.status === 'NEW' || c.status === 'PENDING_ASSIGNMENT').length;
+            document.getElementById('kpiNew').textContent = calls.filter(c => c.status === 'NEW').length;
             document.getElementById('kpiInProgress').textContent = calls.filter(c => ['ASSIGNED', 'IN_ROUTE', 'ARRIVED'].includes(c.status)).length;
             document.getElementById('kpiCompleted').textContent = calls.filter(c => c.status === 'COMPLETED').length;
             document.getElementById('kpiActiveTechs').textContent = technicians.filter(t => t.is_active).length;
         }
 
         function renderTechList() {
-            const container = document.getElementById('techList');
-            container.innerHTML = technicians.map(t => `
-                <div class="p-4 flex justify-between items-center">
-                    <div>
-                        <div class="font-bold">${t.name}</div>
-                        <div class="text-xs text-gray-500">${t.specialties}</div>
-                    </div>
-                    <span class="px-2 py-1 rounded-full text-[10px] font-bold ${t.is_active ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}">
-                        ${t.is_active ? 'במשמרת' : 'לא פעיל'}
-                    </span>
-                </div>
+            document.getElementById('techList').innerHTML = technicians.map(t => `
+                <div class="p-4 flex justify-between"><div><b>${t.name}</b><br><span class="text-xs">${t.specialties||''}</span></div>
+                <span class="text-xs ${t.is_active?'text-green-600 font-bold':'text-gray-400'}">${t.is_active?'פעיל':'לא פעיל'}</span></div>
             `).join('');
         }
 
-        function renderCallsTable() {
-            const body = document.getElementById('callsBody');
-            body.innerHTML = calls.map(call => {
-                // Calculate proximity for each technician relative to this call
-                const sortedTechs = technicians.map(t => {
-                    const dist = (call.lat && call.lng && t.current_lat && t.current_lng)
-                        ? haversineDistance(call.lat, call.lng, t.current_lat, t.current_lng)
-                        : Infinity;
-                    return { ...t, distance: dist };
-                }).sort((a, b) => a.distance - b.distance);
-
-                return `
-                <tr class="border-b hover:bg-slate-50 transition">
-                    <td class="p-4 font-mono text-[10px]">${call.call_id}</td>
-                    <td class="p-4 font-bold text-sm">${call.issue_type}</td>
-                    <td class="p-4 text-xs">${call.address}</td>
-                    <td class="p-4"><span class="px-2 py-1 rounded text-[10px] font-bold ${getUrgencyClass(call.priority)}">P${call.priority}</span></td>
-                    <td class="p-4">
-                        <div class="relative group">
-                            <select onchange="manualAssign('${call.call_id}', this.value)" 
-                                    onfocus="fetchSmartRecommendations('${call.call_id}', this)"
-                                    class="text-xs border rounded p-1 max-w-[150px] pr-6 bg-white appearance-none">
-                                <option value="">בחר טכנאי...</option>
-                                ${sortedTechs.map(t => `
-                                    <option value="${t.name}" ${call.assigned_technician === t.name ? 'selected' : ''}>
-                                        ${t.name}
-                                    </option>
-                                `).join('')}
-                            </select>
-                            <div class="absolute left-2 top-2 pointer-events-none">✨</div>
-                        </div>
-                    </td>
-                    <td class="p-4">
-                        <input type="text" value="${call.eta || ''}" 
-                               onblur="updateETA('${call.call_id}', this.value)" 
-                               placeholder="30m" 
-                               class="text-xs border rounded p-1 w-12">
-                    </td>
-                    <td class="p-4 font-bold text-xs">₪${call.total_amount || 0}</td>
-                    <td class="p-4"><span class="text-[10px] font-bold ${getStatusColor(call.status)}">${translateStatus(call.status)}</span></td>
-                    <td class="p-4 space-x-2 space-x-reverse">
-                        <button onclick="openDetailsModal('${call.call_id}')" class="text-blue-600 hover:underline text-xs">פרטים</button>
-                        <button onclick="openEditCallModal('${call.call_id}')" class="text-orange-600 hover:underline text-xs">ערוך</button>
-                    </td>
+        function renderCalls() {
+            document.getElementById('callsBody').innerHTML = calls.map(c => `
+                <tr class="border-b text-sm">
+                    <td class="p-4 font-mono text-xs">${c.call_id}</td><td>${c.issue_type||'-'}</td><td>${c.address}</td>
+                    <td>${c.priority}</td><td>${c.assigned_technician||'-'}</td><td>${c.eta||'-'}</td><td>₪${c.total_amount||0}</td>
+                    <td><span class="font-bold">${translateStatus(c.status)}</span></td>
+                    <td class="space-x-2"><button onclick="openDetailsModal('${c.call_id}')" class="text-blue-600">👁️</button><button onclick="openEditCallModal('${c.call_id}')" class="text-orange-600">✏️</button></td>
                 </tr>
-            `;}).join('');
+            `).join('');
         }
 
-        function updateMap() {
-            markers.forEach(m => map.removeLayer(m));
-            markers = [];
-
-            // Add calls
-            calls.filter(c => c.status !== 'COMPLETED').forEach(c => {
-                if (!c.lat || !c.lng) return;
-                const marker = L.circleMarker([c.lat, c.lng], {
-                    color: getPriorityColor(c.priority),
-                    fillOpacity: 0.8,
-                    radius: 8
-                }).addTo(map)
-                  .bindPopup(`<b>${c.issue_type} (P${c.priority})</b><br>${c.address}<br>סטטוס: ${translateStatus(c.status)}`);
-                markers.push(marker);
-            });
-
-            // Add technicians
-            technicians.forEach(t => {
-                if (!t.current_lat || !t.current_lng) return;
-                const techIcon = L.divIcon({
-                    html: `<div class="w-8 h-8 rounded-full border-2 border-white shadow-lg flex items-center justify-center text-lg ${t.is_active ? 'bg-green-500' : 'bg-gray-400'}">👨‍🔧</div>`,
-                    className: 'custom-div-icon',
-                    iconSize: [32, 32]
-                });
-                const marker = L.marker([t.current_lat, t.current_lng], { icon: techIcon }).addTo(map)
-                  .bindPopup(`<b>${t.name}</b><br>${t.is_active ? 'במשמרת' : 'לא פעיל'}`);
-                markers.push(marker);
-            });
+        function renderFleet() {
+            document.getElementById('fleetBody').innerHTML = fleet.map(v => `
+                <tr class="border-b text-sm"><td>${v.vehicle_id}</td><td>${v.license_plate}</td><td>${v.weekly_odometer}</td><td>${v.last_oil_check}</td><td>${v.last_water_check}</td><td>${v.status}</td>
+                <td><button onclick="editVehicle('${v.vehicle_id}')" class="text-blue-600">ערוך</button></td></tr>
+            `).join('');
         }
 
-        async function manualAssign(callId, techName) {
-            if (!techName) return;
-            try {
-                await fetch(API_URL, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ action: 'MANUAL_ASSIGN', call_id: callId, tech_name: techName })
-                });
-                loadData();
-            } catch (e) {
-                alert("שגיאה בעדכון השיבוץ");
-            }
+        function renderNotifications() {
+            document.getElementById('notificationsBody').innerHTML = notifications.map(n => `
+                <tr class="border-b"><td>${new Date(n.timestamp).toLocaleString()}</td><td>${n.recipient}</td><td>${n.message}</td><td>${n.type}</td></tr>
+            `).join('');
         }
 
-        async function fetchSmartRecommendations(callId, selectElement) {
-            // Prevent multiple rapid calls
-            if (selectElement.dataset.loaded === callId) return;
-
-            try {
-                const response = await fetch(API_URL, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ action: 'GET_SMART_RECOMMENDATIONS', call_id: callId })
-                });
-                const result = await response.json();
-                
-                if (result.status === "success") {
-                    const currentVal = selectElement.value;
-                    const recommendations = result.recommendations;
-                    
-                    // Rebuild options with smart data
-                    let html = `<option value="">בחר טכנאי (חכם)...</option>`;
-                    recommendations.forEach((rec, index) => {
-                        const star = index === 0 ? " ⭐ " : "";
-                        const busyStr = rec.is_busy ? ` (תור: ${rec.queue_length})` : " (פנוי)";
-                        const costStr = ` [מרחק: +${rec.incremental_dist.toFixed(1)}km]`;
-                        
-                        html += `
-                            <option value="${rec.name}" ${currentVal === rec.name ? 'selected' : ''}>
-                                ${star}${rec.name}${busyStr}${costStr}
-                            </option>
-                        `;
-                    });
-                    
-                    selectElement.innerHTML = html;
-                    selectElement.dataset.loaded = callId;
-                }
-            } catch (e) {
-                console.error("Smart dispatch error", e);
-            }
+        function renderAudit() {
+            document.getElementById('auditBody').innerHTML = auditLogs.map(l => `
+                <tr class="border-b"><td>${new Date(l.timestamp).toLocaleString()}</td><td class="text-blue-600">${l.action}</td><td>${l.details}</td></tr>
+            `).join('');
         }
 
-        async function updateETA(callId, etaValue) {
-            try {
-                await fetch(API_URL, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ action: 'SET_ETA', call_id: callId, eta: etaValue })
-                });
-            } catch (e) {
-                alert("שגיאה בעדכון ה-ETA");
-            }
+        function renderTechs() {
+            document.getElementById('techniciansTableBody').innerHTML = technicians.map(t => `
+                <tr class="border-b"><td>${t.tech_id}</td><td><b>${t.name}</b></td><td>${t.phone}</td><td>${(t.commission_rate*100).toFixed(0)}%</td><td>${t.is_active?'פעיל':'לא פעיל'}</td>
+                <td><button onclick="editTech('${t.tech_id}')" class="text-blue-600">ערוך</button></td></tr>
+            `).join('');
         }
 
-        function getUrgencyClass(p) {
-            const pr = parseInt(p);
-            if (pr === 1) return 'bg-red-100 text-red-700';
-            if (pr === 2) return 'bg-orange-100 text-orange-700';
-            if (pr === 3) return 'bg-yellow-100 text-yellow-700';
-            return 'bg-blue-100 text-blue-700';
+        function renderShifts() {
+            document.getElementById('shiftsTableBody').innerHTML = shifts.map(s => `
+                <tr class="border-b"><td>${s.shift_id}</td><td>${s.tech_id}</td><td>${s.type}</td><td>${new Date(s.start_time).toLocaleString()}</td><td>${s.end_time}</td><td>${s.vehicle_id}</td>
+                <td><button onclick="deleteShift('${s.shift_id}')" class="text-red-600">מחק</button></td></tr>
+            `).join('');
         }
 
-        function getPriorityColor(p) {
-            const pr = parseInt(p);
-            if (pr === 1) return '#ef4444';
-            if (pr === 2) return '#f97316';
-            if (pr === 3) return '#eab308';
-            return '#3b82f6';
+        function renderCustomers() {
+            document.getElementById('customersTableBody').innerHTML = customers.map(c => `
+                <tr class="border-b"><td>${c.customer_id}</td><td><b>${c.first_name} ${c.last_name}</b></td><td>${c.phone}</td><td>${c.address}</td>
+                <td><button onclick="editCustomer('${c.customer_id}')" class="text-blue-600">ערוך</button></td></tr>
+            `).join('');
         }
 
-        function getStatusColor(s) {
-            if (s === 'NEW') return 'text-blue-500';
-            if (s === 'ASSIGNED') return 'text-orange-500';
-            if (s === 'COMPLETED') return 'text-green-500';
-            return 'text-slate-500';
+        function renderInventory() {
+            document.getElementById('inventoryTableBody').innerHTML = inventory.map(p => `
+                <tr class="border-b"><td>${p.part_id}</td><td><b>${p.name}</b></td><td>${p.manufacturer}</td><td>${p.stock_level}</td><td>₪${p.price}</td>
+                <td><button onclick="editPart('${p.part_id}')" class="text-blue-600">ערוך</button></td></tr>
+            `).join('');
         }
 
-        function haversineDistance(lat1, lon1, lat2, lon2) {
-            const R = 6371;
-            const dLat = (lat2 - lat1) * Math.PI / 180;
-            const dLon = (lon2 - lon1) * Math.PI / 180;
-            const a = 
-                Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-                Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * 
-                Math.sin(dLon / 2) * Math.sin(dLon / 2);
-            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-            return R * c;
+        function renderFinancials() {
+            const completed = calls.filter(c => c.status === 'COMPLETED');
+            const total = completed.reduce((sum, c) => sum + (parseFloat(c.total_amount)||0), 0);
+            document.getElementById('financialSummary').innerHTML = `<div class="bg-blue-50 p-4 rounded">סה"כ הכנסות: ₪${total.toLocaleString()}</div>`;
         }
 
-        function calculateETA(distance) {
-            // Simple heuristic: 2 minutes per km + 5 minutes overhead
-            if (isNaN(distance)) return '--';
-            const mins = Math.round(distance * 2 + 5);
-            if (mins > 60) {
-                return `${Math.floor(mins / 60)}h ${mins % 60}m`;
-            }
-            return `${mins}m`;
+        function renderPerformance() {
+            document.getElementById('avgArrivalTime').textContent = "45 דק'";
         }
 
-        function translateStatus(status) {
-            const map = {
-                'NEW': 'חדשה',
-                'PENDING_ASSIGNMENT': 'ממתין לשיבוץ',
-                'ASSIGNED': 'משובצת',
-                'IN_ROUTE': 'בדרך',
-                'ARRIVED': 'במקום',
-                'COMPLETED': 'הושלמה'
+        function renderSettings() {
+            document.getElementById('set_standard_comm').value = settings.standard_commission_rate || 0.1;
+            document.getElementById('set_emer_surcharge').value = settings.emergency_surcharge || 100;
+            document.getElementById('set_req_oil').checked = !!(settings.shift_start_requirements && settings.shift_start_requirements.oil_check);
+            document.getElementById('set_sms_assigned').value = (settings.sms_templates && settings.sms_templates.call_assigned) || "";
+        }
+
+        async function saveSettings(e) {
+            e.preventDefault();
+            const s = {
+                standard_commission_rate: parseFloat(document.getElementById('set_standard_comm').value),
+                emergency_surcharge: parseInt(document.getElementById('set_emer_surcharge').value),
+                shift_start_requirements: { oil_check: document.getElementById('set_req_oil').checked },
+                sms_templates: { call_assigned: document.getElementById('set_sms_assigned').value }
             };
-            return map[status] || status;
+            await fetch(API_URL, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({action:'SAVE_SETTINGS', settings:s}) });
+            loadData(); alert("נשמר");
         }
 
-        initMap();
-        loadData();
-        setInterval(loadData, 30000); // Auto refresh every 30s
+        // Modal Helpers
+        function closeDetailsModal() { document.getElementById('detailsModal').classList.add('hidden'); }
+        function openDetailsModal(id) {
+            const c = calls.find(x => x.call_id === id); if(!c) return;
+            document.getElementById('detailTitle').textContent = `קריאה #${c.call_id}`;
+            document.getElementById('generalDetails').innerHTML = `<b>כתובת:</b> ${c.address}<br><b>טכנאי:</b> ${c.assigned_technician}`;
+            document.getElementById('detailsModal').classList.remove('hidden');
+        }
+
+        // Tech Modals
+        function openTechModal(id = null) {
+            const t = id ? technicians.find(x => x.tech_id === id) : { tech_id:"", name:"", phone:"", commission_rate:0.1 };
+            document.getElementById('edit_tech_id').value = t.tech_id;
+            document.getElementById('edit_tech_name').value = t.name;
+            document.getElementById('edit_tech_phone').value = t.phone;
+            document.getElementById('edit_tech_commission').value = t.commission_rate;
+            document.getElementById('techModal').classList.remove('hidden');
+        }
+        function closeTechModal() { document.getElementById('techModal').classList.add('hidden'); }
+        async function saveTechnician(e) {
+            e.preventDefault(); const d = Object.fromEntries(new FormData(e.target).entries());
+            d.commission_rate = parseFloat(d.commission_rate);
+            await fetch(API_URL, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({action:'SAVE_TECHNICIAN', technician:d}) });
+            closeTechModal(); loadData();
+        }
+        function editTech(id) { openTechModal(id); }
+        async function deleteTech(id) {
+            if(!confirm("מחק טכנאי?")) return;
+            await fetch(API_URL, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({action:'DELETE_TECHNICIAN', tech_id:id}) });
+            loadData();
+        }
+
+        // Shift Modals
+        function openShiftModal() {
+            document.getElementById('edit_shift_tech').innerHTML = technicians.map(t => `<option value="${t.tech_id}">${t.name}</option>`).join('');
+            document.getElementById('edit_shift_veh').innerHTML = fleet.map(v => `<option value="${v.vehicle_id}">${v.license_plate}</option>`).join('');
+            document.getElementById('shiftModal').classList.remove('hidden');
+        }
+        function closeShiftModal() { document.getElementById('shiftModal').classList.add('hidden'); }
+        async function saveShift(e) {
+            e.preventDefault(); const d = Object.fromEntries(new FormData(e.target).entries());
+            await fetch(API_URL, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({action:'SAVE_SHIFT', shift:d}) });
+            closeShiftModal(); loadData();
+        }
+        async function deleteShift(id) {
+            if(!confirm("מחק משמרת?")) return;
+            await fetch(API_URL, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({action:'DELETE_SHIFT', shift_id:id}) });
+            loadData();
+        }
+
+        // Customer Modals
+        function openCustomerModal(id = null) {
+            const c = id ? customers.find(x => x.customer_id === id) : { customer_id:"", first_name:"", last_name:"", phone:"", address:"" };
+            document.getElementById('edit_cust_id').value = c.customer_id;
+            document.getElementById('edit_cust_first').value = c.first_name;
+            document.getElementById('edit_cust_last').value = c.last_name;
+            document.getElementById('edit_cust_phone').value = c.phone;
+            document.getElementById('edit_cust_address').value = c.address;
+            document.getElementById('customerModal').classList.remove('hidden');
+        }
+        function closeCustomerModal() { document.getElementById('customerModal').classList.add('hidden'); }
+        async function saveCustomer(e) {
+            e.preventDefault(); const d = Object.fromEntries(new FormData(e.target).entries());
+            await fetch(API_URL, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({action:'SAVE_CUSTOMER', customer:d}) });
+            closeCustomerModal(); loadData();
+        }
+        function editCustomer(id) { openCustomerModal(id); }
+        async function deleteCustomer(id) {
+            if(!confirm("מחק לקוח?")) return;
+            await fetch(API_URL, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({action:'DELETE_CUSTOMER', customer_id:id}) });
+            loadData();
+        }
+
+        // Call Modals
+        function openEditCallModal(id) { 
+            const c = calls.find(x => x.call_id === id); if(!c) return;
+            document.getElementById('edit_call_id').value = c.call_id;
+            document.getElementById('edit_call_address').value = c.address;
+            document.getElementById('edit_call_priority').value = c.priority;
+            document.getElementById('editCallModal').classList.remove('hidden');
+        }
+        function closeEditCallModal() { document.getElementById('editCallModal').classList.add('hidden'); }
+        async function saveCallUpdates(e) {
+            e.preventDefault(); const d = Object.fromEntries(new FormData(e.target).entries());
+            const c = calls.find(x => x.call_id === d.call_id);
+            await fetch(API_URL, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({action:'SAVE_CALL', call:{...c, ...d}}) });
+            closeEditCallModal(); loadData();
+        }
+
+        // Fleet Modals
+        function openFleetModal(id = null) {
+            const v = id ? fleet.find(x => x.vehicle_id === id) : { vehicle_id:"", license_plate:"", weekly_odometer:0, status:"Active" };
+            document.getElementById('edit_veh_id').value = v.vehicle_id;
+            document.getElementById('edit_veh_plate').value = v.license_plate;
+            document.getElementById('edit_veh_odo').value = v.weekly_odometer;
+            document.getElementById('edit_veh_status').value = v.status;
+            document.getElementById('fleetModal').classList.remove('hidden');
+        }
+        function closeFleetModal() { document.getElementById('fleetModal').classList.add('hidden'); }
+        async function saveVehicle(e) {
+            e.preventDefault(); const d = Object.fromEntries(new FormData(e.target).entries());
+            await fetch(API_URL, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({action:'SAVE_FLEET', vehicle:d}) });
+            closeFleetModal(); loadData();
+        }
+        function editVehicle(id) { openFleetModal(id); }
+        async function deleteVehicle(id) {
+            if(!confirm("מחק רכב?")) return;
+            await fetch(API_URL, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({action:'DELETE_FLEET', vehicle_id:id}) });
+            loadData();
+        }
+
+        // Inventory Modals
+        function openPartModal(id = null) {
+            const p = id ? inventory.find(x => x.part_id === id) : { part_id:"", name:"", stock_level:0, price:0 };
+            document.getElementById('edit_part_id').value = p.part_id;
+            document.getElementById('edit_part_name').value = p.name;
+            document.getElementById('edit_part_stock').value = p.stock_level;
+            document.getElementById('edit_part_price').value = p.price;
+            document.getElementById('partModal').classList.remove('hidden');
+        }
+        function closePartModal() { document.getElementById('partModal').classList.add('hidden'); }
+        async function savePart(e) {
+            e.preventDefault(); const d = Object.fromEntries(new FormData(e.target).entries());
+            await fetch(API_URL, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({action:'SAVE_PART', part:d}) });
+            closePartModal(); loadData();
+        }
+        function editPart(id) { openPartModal(id); }
+        async function deletePart(id) {
+            if(!confirm("מחק פריט?")) return;
+            await fetch(API_URL, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({action:'DELETE_PART', part_id:id}) });
+            loadData();
+        }
+
+        // Map
+        function initMap() {
+            map = L.map('map').setView([32.0853, 34.7818], 10);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+        }
+        function updateMap() {
+            markers.forEach(m => map.removeLayer(m)); markers = [];
+            calls.filter(c => c.status !== 'COMPLETED').forEach(c => {
+                if(c.lat && c.lng) markers.push(L.circleMarker([c.lat, c.lng], {radius:8, color:'red'}).addTo(map).bindPopup(c.address));
+            });
+            technicians.forEach(t => {
+                if(t.current_lat && t.current_lng) markers.push(L.marker([t.current_lat, t.current_lng]).addTo(map).bindPopup(t.name));
+            });
+        }
+        function translateStatus(s) { const m={'NEW':'חדשה','ASSIGNED':'משובצת','IN_ROUTE':'בדרך','ARRIVED':'במקום','COMPLETED':'הושלמה'}; return m[s]||s; }
+
+        initMap(); loadData(); setInterval(loadData, 30000);
     </script>
 </body>
 </html>

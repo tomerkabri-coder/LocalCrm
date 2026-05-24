@@ -11,6 +11,7 @@ class JsonDatabase {
       shifts: path.join(dataDir, 'shifts.json'),
       fleet: path.join(dataDir, 'fleet.json'),
       settings: path.join(dataDir, 'settings.json'),
+      inventory: path.join(dataDir, 'inventory.json'),
       notifications: path.join(dataDir, 'notifications.json'),
       assignments_log: path.join(dataDir, 'assignments_log.json')
     };
@@ -74,6 +75,13 @@ class JsonDatabase {
     data[index] = { ...data[index], ...updates };
     this.write(entity, data);
     return data[index];
+  }
+
+  remove(entity, predicate) {
+    const data = this.read(entity);
+    const filtered = data.filter(item => !predicate(item));
+    this.write(entity, filtered);
+    return true;
   }
 }
 

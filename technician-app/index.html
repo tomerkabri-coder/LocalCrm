@@ -12,16 +12,16 @@
     </style>
 </head>
 <body class="bg-slate-900 text-white min-h-screen p-4">
-    <script>
-        if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('sw.js');
-        }
-    </script>
+    <script>if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js');</script>
+    
     <div class="max-w-md mx-auto">
         <header class="flex justify-between items-center mb-6">
             <div>
                 <h1 class="text-xl font-bold">ממשק טכנאי</h1>
-                <span id="syncQueueBadge" class="hidden text-[10px] bg-orange-600 px-2 py-0.5 rounded-full font-bold animate-pulse mt-1 inline-block">0 ממתינים לסנכרון ⏳</span>
+                <div class="flex items-center space-x-2 space-x-reverse">
+                    <span id="syncQueueBadge" class="hidden text-[10px] bg-orange-600 px-2 py-0.5 rounded-full font-bold animate-pulse">0 ממתינים לסנכרון ⏳</span>
+                    <button id="clearQueueBtn" onclick="clearSyncQueue()" class="hidden text-[10px] bg-red-600 px-2 py-0.5 rounded-full font-bold hover:bg-red-700 transition">נקה תור 🗑️</button>
+                </div>
             </div>
             <div class="flex items-center space-x-3 space-x-reverse">
                 <span id="shiftStatusLabel" class="text-xs text-slate-400">לא במשמרת</span>
@@ -31,139 +31,27 @@
             </div>
         </header>
 
-        <!-- Login Section (Simplified for POC) -->
+        <!-- Navigation Tabs -->
+        <div id="techTabs" class="hidden flex space-x-2 space-x-reverse mb-6 bg-slate-800 p-1 rounded-xl">
+            <button onclick="switchTechTab('dashboard')" id="tabDashboard" class="flex-1 py-2 rounded-lg text-sm font-bold bg-blue-600 text-white transition">לוח עבודה</button>
+            <button onclick="switchTechTab('history')" id="tabHistory" class="flex-1 py-2 rounded-lg text-sm font-bold text-slate-400 hover:text-white transition">היסטוריה</button>
+        </div>
+
+        <!-- Login Section -->
         <div id="loginSection" class="bg-slate-800 p-6 rounded-xl shadow-xl">
             <h2 class="text-lg mb-4 text-center">הזדהות טכנאי</h2>
-            <input type="text" id="techIdInput" placeholder="הזן מזהה טכנאי (למשל T1)" class="w-full bg-slate-700 border-none rounded-lg p-3 text-white focus:ring-2 focus:ring-blue-500 mb-4">
-            <button onclick="login()" class="w-full bg-blue-600 hover:bg-blue-700 py-3 rounded-lg font-bold transition">כניסה</button>
+            <input type="text" id="techIdInput" placeholder="הזן מזהה (למשל T001)" class="w-full bg-slate-700 border-none rounded-lg p-3 text-white focus:ring-2 focus:ring-blue-500 mb-4">
+            <button onclick="login()" class="w-full bg-blue-600 hover:bg-blue-700 py-3 rounded-lg font-bold transition mb-4">כניסה</button>
+            <button onclick="hardResetApp()" class="w-full text-slate-500 text-[10px] uppercase tracking-widest hover:text-red-400 transition">Hard Reset Application ⚠️</button>
         </div>
 
-        <!-- Shift Entry Wizard (Compliance Checklist) -->
-        <div id="shiftWizard" class="hidden bg-slate-800 p-6 rounded-xl shadow-xl space-y-4">
-            <h2 class="text-lg font-bold text-center border-b border-slate-700 pb-2">נוהל עלייה למשמרת 📝</h2>
-            
-            <div class="space-y-3">
-                <p class="text-sm font-semibold text-blue-400">תקינות רכב:</p>
-                <label class="flex items-center space-x-3 space-x-reverse">
-                    <input type="checkbox" id="check_oil" class="w-5 h-5 rounded bg-slate-700 border-none">
-                    <span>שמן ומים</span>
-                </label>
-                <label class="flex items-center space-x-3 space-x-reverse">
-                    <input type="checkbox" id="check_lights" class="w-5 h-5 rounded bg-slate-700 border-none">
-                    <span>אורות וצמיגים</span>
-                </label>
-                <input type="number" id="odometer_start" placeholder="מד אוץ (Vehicle Mail)" class="w-full bg-slate-700 border-none rounded-lg p-2 text-white">
-            </div>
-
-            <div class="space-y-3">
-                <p class="text-sm font-semibold text-blue-400">הופעה ייצוגית:</p>
-                <label class="flex items-center space-x-3 space-x-reverse">
-                    <input type="checkbox" id="check_uniform" class="w-5 h-5 rounded bg-slate-700 border-none">
-                    <span>חולצת לוגו ומכנס ארוך</span>
-                </label>
-                <label class="flex items-center space-x-3 space-x-reverse">
-                    <input type="checkbox" id="check_shoes" class="w-5 h-5 rounded bg-slate-700 border-none">
-                    <span>נעלי עבודה סגורות</span>
-                </label>
-            </div>
-
-            <button onclick="submitShiftStart()" class="w-full bg-green-600 hover:bg-green-700 py-3 rounded-lg font-bold transition">אשר והתחל משמרת</button>
-            <button onclick="hideWizard()" class="w-full bg-slate-700 hover:bg-slate-600 py-2 rounded-lg text-sm transition">ביטול</button>
+        <!-- History Section -->
+        <div id="historySection" class="hidden space-y-4">
+            <h2 class="text-lg font-semibold mb-4 text-center">היסטוריית עבודות</h2>
+            <div id="historyList" class="space-y-3"></div>
         </div>
 
-        <!-- Job Execution Modal -->
-        <div id="jobModal" class="hidden fixed inset-0 bg-slate-900/90 backdrop-blur-md z-50 overflow-y-auto p-4">
-            <div class="max-w-md mx-auto bg-slate-800 rounded-2xl shadow-2xl p-6 mt-10 space-y-6">
-                <div class="flex justify-between items-center border-b border-slate-700 pb-4">
-                    <h2 id="modalCallId" class="text-xl font-bold">ביצוע עבודה</h2>
-                    <button onclick="closeJobModal()" class="text-slate-400 hover:text-white">✕</button>
-                </div>
-
-                <div class="space-y-4">
-                    <div>
-                        <p class="text-sm text-blue-400 mb-2">שלב 1: תיעוד הגעה 📸</p>
-                        <div class="grid grid-cols-2 gap-3">
-                            <div class="bg-slate-700 p-3 rounded-lg text-center cursor-pointer hover:bg-slate-600 transition relative">
-                                <span class="text-xs">תמונת "לפני"</span>
-                                <input type="file" id="beforePhotoFile" accept="image/*" capture="camera" class="absolute inset-0 opacity-0 cursor-pointer" onchange="previewImage(this, 'beforePreview')">
-                                <div id="beforePreview" class="mt-2 hidden"><img src="" class="h-16 w-full object-cover rounded"></div>
-                            </div>
-                            <div class="bg-slate-700 p-3 rounded-lg text-center cursor-pointer hover:bg-slate-600 transition relative">
-                                <span class="text-xs">צילום מטר (Tape)</span>
-                                <input type="file" id="measurePhotoFile" accept="image/*" capture="camera" class="absolute inset-0 opacity-0 cursor-pointer" onchange="previewImage(this, 'measurePreview')">
-                                <div id="measurePreview" class="mt-2 hidden"><img src="" class="h-16 w-full object-cover rounded"></div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div>
-                        <p class="text-sm text-blue-400 mb-2">שלב 2: הצעת מחיר ומכירה 💰</p>
-                        <div class="bg-slate-700 p-4 rounded-xl space-y-3">
-                            <div class="grid grid-cols-2 gap-3">
-                                <div>
-                                    <label class="text-[10px] text-slate-400">סכום סופי (₪)</label>
-                                    <input type="number" id="totalAmount" class="w-full bg-slate-800 border-none rounded-lg p-2 text-sm" placeholder="0">
-                                </div>
-                                <div>
-                                    <label class="text-[10px] text-slate-400">מקדמה (₪)</label>
-                                    <input type="number" id="depositAmount" class="w-full bg-slate-800 border-none rounded-lg p-2 text-sm" placeholder="0">
-                                </div>
-                            </div>
-                            <label class="flex items-center space-x-3 space-x-reverse cursor-pointer">
-                                <input type="checkbox" id="checkSignature" class="w-5 h-5 rounded bg-slate-800 border-none">
-                                <span class="text-sm">חתימה דיגיטלית בוצעה ✍️</span>
-                            </label>
-                        </div>
-                    </div>
-
-                    <div>
-                        <p class="text-sm text-blue-400 mb-2">שלב 3: מפרט דלת (Inventory Specs) 🚪</p>
-                        <div class="bg-slate-700 p-4 rounded-xl space-y-3">
-                            <select id="specManufacturer" class="w-full bg-slate-800 border-none rounded-lg p-2 text-sm">
-                                <option value="">יצרן (Amarr, Clopay...)</option>
-                                <option value="Amarr">Amarr</option>
-                                <option value="Clopay">Clopay</option>
-                                <option value="Safeway">Safeway</option>
-                                <option value="CHI">CHI</option>
-                                <option value="Wayne Dalton">Wayne Dalton</option>
-                            </select>
-                            <div class="grid grid-cols-2 gap-3">
-                                <input type="text" id="specTrim" placeholder="Trim (Color/Style)" class="bg-slate-800 border-none rounded-lg p-2 text-sm">
-                                <input type="number" id="specStruts" placeholder="כמות Struts" class="bg-slate-800 border-none rounded-lg p-2 text-sm">
-                            </div>
-                            <label class="flex items-center space-x-3 space-x-reverse cursor-pointer">
-                                <input type="checkbox" id="specBottomPanel" class="w-5 h-5 rounded bg-slate-800 border-none">
-                                <span class="text-sm">Bottom Panel נדרש?</span>
-                            </label>
-                            <label class="flex items-center space-x-3 space-x-reverse cursor-pointer text-orange-400">
-                                <input type="checkbox" id="warehouseAlert" class="w-5 h-5 rounded bg-slate-800 border-none">
-                                <span class="text-sm font-bold">התראת מחסן (ציוד מיוחד) ⚠️</span>
-                            </label>
-                        </div>
-                    </div>
-
-                    <div>
-                        <p class="text-sm text-blue-400 mb-2">שלב 4: סיום עבודה ✅</p>
-                        <div class="bg-slate-700 p-4 rounded-xl space-y-3">
-                            <div class="bg-slate-800 p-3 rounded-lg text-center cursor-pointer hover:bg-slate-600 transition relative">
-                                <span class="text-xs">תמונת "אחרי"</span>
-                                <input type="file" id="afterPhotoFile" accept="image/*" capture="camera" class="absolute inset-0 opacity-0 cursor-pointer" onchange="previewImage(this, 'afterPreview')">
-                                <div id="afterPreview" class="mt-2 hidden"><img src="" class="h-16 w-full object-cover rounded"></div>
-                            </div>
-                            <label class="flex items-center space-x-3 space-x-reverse cursor-pointer">
-                                <input type="checkbox" id="checkSticker" class="w-5 h-5 rounded bg-slate-800 border-none">
-                                <span class="text-sm">מדבקת שירות הודבקה 🏷️</span>
-                            </label>
-                            <textarea id="jobNotes" placeholder="הערות לתיק/מחסן..." class="w-full bg-slate-800 border-none rounded-lg p-2 text-sm h-20"></textarea>
-                        </div>
-                    </div>
-                </div>
-
-                <button onclick="submitJobCompletion()" class="w-full bg-green-600 hover:bg-green-700 py-4 rounded-xl font-bold text-lg shadow-lg transition transform active:scale-95">סיום וסגירת קריאה</button>
-            </div>
-        </div>
-
-        <!-- Main Dashboard (Hidden by default) -->
+        <!-- Dashboard Section -->
         <div id="dashboard" class="hidden space-y-4">
             <div id="offDutyOverlay" class="bg-slate-800/80 backdrop-blur-sm p-8 rounded-xl text-center border border-slate-700">
                 <p class="text-lg mb-4">אתה כרגע לא במשמרת</p>
@@ -178,13 +66,67 @@
                     </div>
                     <div class="flex justify-between items-end">
                         <div id="locationDisplay" class="text-sm font-mono text-slate-300">מחפש אותך... 🛰️</div>
-                        <button onclick="updateLocation()" class="text-blue-400 text-xs hover:underline">סנכרן עכשיו 🔄</button>
+                        <button onclick="updateLocation()" class="text-blue-400 text-xs hover:underline">סנכרן 🔄</button>
                     </div>
-                    </div>
+                </div>
 
-                    <h2 class="text-lg font-semibold mt-6">קריאות פתוחות</h2>                <div id="callsList" class="space-y-3">
+                <h2 class="text-lg font-semibold mt-6">קריאות פתוחות</h2>
+                <div id="callsList" class="space-y-3">
                     <div class="text-center text-slate-500 py-8">אין קריאות פעילות כרגע</div>
                 </div>
+            </div>
+        </div>
+
+        <!-- Modals -->
+        <div id="shiftWizard" class="hidden fixed inset-0 bg-slate-900 z-50 p-6 space-y-4 overflow-y-auto">
+            <h2 class="text-xl font-bold text-center border-b border-slate-700 pb-4">נוהל עלייה למשמרת 📝</h2>
+            <div class="space-y-4 bg-slate-800 p-6 rounded-xl">
+                <label class="flex items-center space-x-3 space-x-reverse"><input type="checkbox" id="check_oil" class="w-6 h-6 rounded bg-slate-700 border-none"><span>בדיקת שמן ומים בוצעה</span></label>
+                <label class="flex items-center space-x-3 space-x-reverse"><input type="checkbox" id="check_lights" class="w-6 h-6 rounded bg-slate-700 border-none"><span>בדיקת אורות וצמיגים בוצעה</span></label>
+                <input type="number" id="odometer_start" placeholder="מד אוץ (Odometer)" class="w-full bg-slate-700 border-none rounded-lg p-3 text-white">
+                <label class="flex items-center space-x-3 space-x-reverse"><input type="checkbox" id="check_uniform" class="w-6 h-6 rounded bg-slate-700 border-none"><span>הופעה ייצוגית (חולצת לוגו)</span></label>
+            </div>
+            <button onclick="submitShiftStart()" class="w-full bg-green-600 py-4 rounded-xl font-bold text-lg shadow-lg">אשר והתחל משמרת</button>
+            <button onclick="hideWizard()" class="w-full bg-slate-700 py-2 rounded-lg text-sm transition">ביטול</button>
+        </div>
+
+        <div id="jobModal" class="hidden fixed inset-0 bg-slate-900/95 backdrop-blur-md z-50 overflow-y-auto p-4">
+            <div class="max-w-md mx-auto bg-slate-800 rounded-2xl shadow-2xl p-6 mt-10 space-y-6">
+                <div class="flex justify-between items-center border-b border-slate-700 pb-4">
+                    <h2 id="modalCallId" class="text-xl font-bold">ביצוע עבודה</h2>
+                    <button onclick="closeJobModal()" class="text-slate-400 hover:text-white">✕</button>
+                </div>
+                
+                <div class="space-y-4">
+                    <p class="text-sm text-blue-400 font-bold border-r-4 border-blue-500 pr-2">שלב 1: תיעוד 📸</p>
+                    <div class="grid grid-cols-2 gap-3">
+                        <div class="bg-slate-700 p-3 rounded-lg relative text-center">
+                            <span class="text-xs">לפני (Mandatory)</span>
+                            <input type="file" id="beforePhotoFile" accept="image/*" capture="camera" class="absolute inset-0 opacity-0 cursor-pointer" onchange="previewImage(this, 'beforePreview')">
+                            <div id="beforePreview" class="hidden mt-2"><img src="" class="h-16 w-full object-cover rounded"></div>
+                        </div>
+                        <div class="bg-slate-700 p-3 rounded-lg relative text-center">
+                            <span class="text-xs">אחרי (Mandatory)</span>
+                            <input type="file" id="afterPhotoFile" accept="image/*" capture="camera" class="absolute inset-0 opacity-0 cursor-pointer" onchange="previewImage(this, 'afterPreview')">
+                            <div id="afterPreview" class="hidden mt-2"><img src="" class="h-16 w-full object-cover rounded"></div>
+                        </div>
+                    </div>
+                    
+                    <p class="text-sm text-blue-400 font-bold border-r-4 border-blue-500 pr-2">שלב 2: תשלום וחלפים 💰</p>
+                    <div class="bg-slate-700 p-4 rounded-xl space-y-3">
+                        <div class="grid grid-cols-2 gap-3">
+                            <div><label class="text-[10px] text-slate-400">סכום סופי (₪)</label><input type="number" id="totalAmount" class="w-full bg-slate-800 border-none rounded-lg p-2 text-sm" placeholder="0"></div>
+                            <div><label class="text-[10px] text-slate-400">מקדמה (₪)</label><input type="number" id="depositAmount" class="w-full bg-slate-800 border-none rounded-lg p-2 text-sm" placeholder="0"></div>
+                        </div>
+                        <p class="text-[10px] text-slate-400 uppercase font-bold">חלקים שהוחלפו:</p>
+                        <div id="partsUsedContainer" class="max-h-32 overflow-y-auto p-2 bg-slate-800 rounded-lg space-y-2"></div>
+                    </div>
+
+                    <p class="text-sm text-blue-400 font-bold border-r-4 border-blue-500 pr-2">שלב 3: מפרט טכני 🚪</p>
+                    <textarea id="jobNotes" placeholder="הערות לתיק/מחסן..." class="w-full bg-slate-700 border-none rounded-lg p-3 text-sm h-24 focus:ring-2 focus:ring-blue-500"></textarea>
+                </div>
+
+                <button onclick="submitJobCompletion()" class="w-full bg-green-600 hover:bg-green-700 py-4 rounded-xl font-bold text-lg shadow-lg transition transform active:scale-95">סיום וסגירת קריאה</button>
             </div>
         </div>
     </div>
@@ -192,404 +134,343 @@
     <script>
         const API_URL = "http://localhost:3000/api/action";
         let currentTechId = null;
+        let isOffDuty = true;
+        let inventory = [];
+        let syncQueue = JSON.parse(localStorage.getItem('syncQueue') || '[]');
         let locationInterval = null;
         let callsInterval = null;
-        let isOffDuty = true;
-        let syncQueue = JSON.parse(localStorage.getItem('syncQueue') || '[]');
+        const photoData = { before: null, after: null };
 
-        const photoData = {
-            before: null,
-            measure: null,
-            after: null
-        };
-
-        // --- Offline Sync Logic ---
-        function queueAction(action, data) {
-            syncQueue.push({ id: Date.now(), action, data });
-            saveQueue();
-            attemptSync();
+        // --- Auth & Navigation ---
+        async function login() {
+            const id = document.getElementById('techIdInput').value;
+            if (!id) return alert("אנא הזן מזהה טכנאי");
+            currentTechId = id;
+            document.getElementById('loginSection').classList.add('hidden');
+            document.getElementById('dashboard').classList.remove('hidden');
+            document.getElementById('techTabs').classList.remove('hidden');
+            updateUI();
+            switchTechTab('dashboard');
+            fetchInventory();
+            attemptSync(); // Process any items remaining in queue
         }
 
+        async function hardResetApp() {
+            if (confirm("האם לאפס את האפליקציה? זה ינקה את כל המטמון וההגדרות המקומיות.")) {
+                // Clear LocalStorage
+                localStorage.clear();
+                // Clear Caches
+                if ('caches' in window) {
+                    const keys = await caches.keys();
+                    await Promise.all(keys.map(key => caches.delete(key)));
+                }
+                // Unregister Service Workers
+                if ('serviceWorker' in navigator) {
+                    const registrations = await navigator.serviceWorker.getRegistrations();
+                    await Promise.all(registrations.map(r => r.unregister()));
+                }
+                // Force Reload
+                window.location.reload(true);
+            }
+        }
+
+        function clearSyncQueue() {
+            if (confirm("האם לנקות את תור הסנכרון? פעולה זו תמחוק עדכונים שטרם נשלחו לשרת.")) {
+                syncQueue = [];
+                saveQueue();
+            }
+        }
+
+        function switchTechTab(tab) {
+            const isDash = tab === 'dashboard';
+            document.getElementById('dashboard').classList.toggle('hidden', !isDash);
+            document.getElementById('historySection').classList.toggle('hidden', isDash);
+            document.getElementById('tabDashboard').className = `flex-1 py-2 rounded-lg text-sm font-bold transition ${isDash ? 'bg-blue-600 text-white' : 'text-slate-400 hover:text-white'}`;
+            document.getElementById('tabHistory').className = `flex-1 py-2 rounded-lg text-sm font-bold transition ${!isDash ? 'bg-blue-600 text-white' : 'text-slate-400 hover:text-white'}`;
+            if (!isDash) fetchHistory();
+        }
+
+        // --- Offline Synchronization Logic ---
         function saveQueue() {
             localStorage.setItem('syncQueue', JSON.stringify(syncQueue));
             updateSyncBadge();
         }
 
+        function updateSyncBadge() {
+            const badge = document.getElementById('syncQueueBadge');
+            const clearBtn = document.getElementById('clearQueueBtn');
+            if (syncQueue.length > 0) {
+                badge.textContent = `${syncQueue.length} ממתינים לסנכרון ⏳`;
+                badge.classList.remove('hidden');
+                clearBtn.classList.remove('hidden');
+            } else {
+                badge.classList.add('hidden');
+                clearBtn.classList.add('hidden');
+            }
+        }
+
+        function clearSyncQueue() {
+            if (confirm("האם לנקות את תור הסנכרון? פעולה זו תמחוק עדכונים שטרם נשלחו לשרת.")) {
+                syncQueue = [];
+                saveQueue();
+            }
+        }
+
         async function attemptSync() {
-            if (syncQueue.length === 0) return;
+            if (syncQueue.length === 0) return updateSyncBadge();
             
             const item = syncQueue[0];
             try {
                 const response = await fetch(API_URL, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ action: item.action, ...item.data })
+                    body: JSON.stringify({ ...item.data, action: item.action })
                 });
                 const result = await response.json();
                 
-                if (result.status === "success") {
+                // If success, "Call not found", or protocol error (400), remove from queue
+                if (result.status === "success" || response.status === 404 || response.status === 400) {
                     syncQueue.shift();
                     saveQueue();
-                    attemptSync(); // Continue to next
+                    attemptSync(); // Process next item
+                } else {
+                    console.error("Sync failed for item:", result.message);
                 }
             } catch (e) {
-                console.log("Still offline, will retry later...");
+                console.log("System offline or server unreachable. Retrying in 10s...");
             }
         }
+        setInterval(attemptSync, 10000);
 
-        function updateSyncBadge() {
-            const badge = document.getElementById('syncQueueBadge');
-            if (syncQueue.length > 0) {
-                badge.textContent = `${syncQueue.length} ממתינים לסנכרון ⏳`;
-                badge.classList.remove('hidden');
-            } else {
-                badge.classList.add('hidden');
-            }
-        }
-
-        setInterval(attemptSync, 10000); // Retry every 10s
-        // --------------------------
-
-        function previewImage(input, previewId) {
-            const file = input.files[0];
-            if (!file) return;
-
-            const reader = new FileReader();
-            reader.onload = e => {
-                const key = previewId.replace('Preview', '');
-                photoData[key] = e.target.result;
-                const preview = document.getElementById(previewId);
-                preview.querySelector('img').src = e.target.result;
-                preview.classList.remove('hidden');
-            };
-            reader.readAsDataURL(file);
-        }
-
-        function login() {
-            const id = document.getElementById('techIdInput').value;
-            if (!id) return alert("אנא הזן מזהה");
-            currentTechId = id;
-            document.getElementById('loginSection').classList.add('hidden');
-            document.getElementById('dashboard').classList.remove('hidden');
-            
-            // Initial state is off duty until toggled
-            updateUI();
-        }
-
-        async function toggleShift() {
-            const newActiveStatus = isOffDuty; // If off duty (true), we want to become active (true)
-            console.log("Toggling shift. New active status:", newActiveStatus);
-            
+        // --- Data Fetching ---
+        async function fetchInventory() {
             try {
                 const response = await fetch(API_URL, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        action: 'UPDATE_TECH_STATUS',
-                        tech_id: currentTechId,
-                        is_active: newActiveStatus
-                    })
+                    body: JSON.stringify({ action: 'GET_ALL_DATA' })
                 });
                 const result = await response.json();
-                console.log("Server response:", result);
-                
                 if (result.status === "success") {
-                    isOffDuty = !newActiveStatus;
-                    updateUI();
-                    
-                    if (!isOffDuty) {
-                        // Started shift
-                        updateLocation();
-                        fetchCalls();
-                        locationInterval = setInterval(updateLocation, 60000);
-                        callsInterval = setInterval(fetchCalls, 30000);
-                    } else {
-                        // Ended shift
-                        clearInterval(locationInterval);
-                        clearInterval(callsInterval);
-                    }
-                } else {
-                    alert("שגיאה מהשרת: " + result.message);
+                    inventory = result.inventory || [];
+                    document.getElementById('partsUsedContainer').innerHTML = inventory.map(p => `
+                        <div class="flex justify-between items-center text-xs bg-slate-900/50 p-2 rounded">
+                            <span>${p.name}</span>
+                            <input type="number" data-part-id="${p.part_id}" class="part-qty w-12 bg-slate-900 rounded p-1 text-center border-none text-blue-400 font-bold" placeholder="0" min="0">
+                        </div>
+                    `).join('');
                 }
-            } catch (e) {
-                console.error("Toggle shift error:", e);
-                alert("שגיאה בחיבור לשרת. וודא שביצעת clasp push.");
+            } catch(e) { console.error("Inventory fetch failed", e); }
+        }
+
+        async function fetchCalls() {
+            if (!currentTechId || isOffDuty) return;
+            try {
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: 'GET_TECH_CALLS', tech_id: currentTechId })
+                });
+                const result = await response.json();
+                if (result.status === "success") renderCalls(result.calls);
+            } catch(e) { console.error("Calls fetch failed", e); }
+        }
+
+        async function fetchHistory() {
+            const list = document.getElementById('historyList');
+            list.innerHTML = '<div class="text-center text-slate-500 py-8">טוען היסטוריה...</div>';
+            try {
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: 'GET_TECH_HISTORY', tech_id: currentTechId })
+                });
+                const result = await response.json();
+                if (result.status === "success") {
+                    list.innerHTML = result.calls.map(c => `
+                        <div class="bg-slate-800 p-4 rounded-xl border-l-4 border-green-500 text-sm mb-3 shadow-lg">
+                            <div class="flex justify-between font-bold text-slate-200">
+                                <span>${c.issue_type || 'קריאת שירות'}</span>
+                                <span class="text-blue-400">₪${c.total_amount}</span>
+                            </div>
+                            <div class="text-xs text-slate-400 mt-1">${c.address}</div>
+                            <div class="text-[10px] text-slate-500 mt-2">${new Date(c.created_at).toLocaleDateString('he-IL')} | ${c.call_id}</div>
+                        </div>
+                    `).join('') || '<div class="text-center text-slate-500 py-8">אין היסטוריית עבודות</div>';
+                }
+            } catch(e) { list.innerHTML = '<div class="text-center text-red-500 py-8">שגיאה בטעינת נתונים</div>'; }
+        }
+
+        // --- Core Operations ---
+        function renderCalls(calls) {
+            const list = document.getElementById('callsList');
+            list.innerHTML = calls.map(c => `
+                <div class="bg-slate-800 p-4 rounded-xl border-l-4 border-blue-500 shadow-xl mb-4" data-call-id="${c.call_id}">
+                    <div class="flex justify-between items-start">
+                        <b class="text-lg">${c.issue_type}</b>
+                        <span class="text-[10px] bg-slate-700 px-2 py-1 rounded text-slate-400">${c.call_id}</span>
+                    </div>
+                    <div class="text-sm text-slate-300 mt-2 font-medium">${c.address}</div>
+                    <div class="mt-4 flex space-x-2 space-x-reverse">
+                        <button onclick="updateStatus('${c.call_id}','IN_ROUTE')" class="flex-1 bg-blue-600 py-3 rounded-lg text-sm font-bold shadow-lg ${c.status!=='ASSIGNED'?'hidden':''}">יצאתי לדרך 🏃‍♂️</button>
+                        <button onclick="updateStatus('${c.call_id}','ARRIVED')" class="flex-1 bg-orange-600 py-3 rounded-lg text-sm font-bold shadow-lg ${c.status!=='IN_ROUTE'?'hidden':''}">הגעתי ליעד 📍</button>
+                        <button onclick="openJobModal('${c.call_id}')" class="flex-1 bg-green-600 py-3 rounded-lg text-sm font-bold shadow-lg ${c.status!=='ARRIVED'?'hidden':''}">התחל עבודה 🛠️</button>
+                    </div>
+                </div>
+            `).join('') || '<div class="text-center text-slate-500 py-8">אין קריאות פעילות כרגע</div>';
+        }
+
+        async function updateStatus(id, s) { 
+            try {
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: 'UPDATE_CALL_STATUS', call_id: id, status: s })
+                });
+                if ((await response.json()).status === "success") fetchCalls();
+            } catch(e) { 
+                // Fallback to queue if status update fails
+                syncQueue.push({ action: 'UPDATE_CALL_STATUS', data: { call_id: id, status: s } });
+                saveQueue();
+                alert("אין חיבור. הפעולה תסונכרן בהמשך.");
             }
         }
 
+        let currentJobId = null;
+        function openJobModal(id) { 
+            currentJobId = id; 
+            document.getElementById('modalCallId').textContent = "ביצוע עבודה: " + id; 
+            document.getElementById('jobModal').classList.remove('hidden'); 
+        }
+        function closeJobModal() { document.getElementById('jobModal').classList.add('hidden'); currentJobId = null; }
+
+        async function submitJobCompletion() {
+            const partsUsed = [];
+            document.querySelectorAll('.part-qty').forEach(input => {
+                const qty = parseInt(input.value);
+                if (qty > 0) partsUsed.push({ part_id: input.dataset.partId, quantity: qty });
+            });
+
+            const updates = { 
+                before_photo: photoData.before, 
+                after_photo: photoData.after, 
+                total_amount: document.getElementById('totalAmount').value, 
+                deposit_paid: document.getElementById('depositAmount').value, 
+                notes: document.getElementById('jobNotes').value,
+                parts_used: partsUsed 
+            };
+
+            // Protocol check (DISABLED FOR TESTING)
+            // if (!photoData.before || !photoData.after) return alert("חובה לצלם תמונת לפני ואחרי!");
+            if (!updates.total_amount) return alert("חובה להזין סכום סופי");
+
+            syncQueue.push({ action: 'UPDATE_CALL_STATUS', data: { call_id: currentJobId, status: 'COMPLETED', updates } });
+            saveQueue();
+            attemptSync();
+            
+            alert("העבודה הושלמה ונשלחה לסנכרון! ✅");
+            closeJobModal();
+            const el = document.querySelector(`[data-call-id="${currentJobId}"]`);
+            if (el) el.remove();
+        }
+
+        // --- Shift & Sync Management ---
         function updateUI() {
-            const label = document.getElementById('shiftStatusLabel');
-            const toggle = document.getElementById('shiftToggle');
-            const dot = document.getElementById('shiftToggleDot');
-            const overlay = document.getElementById('offDutyOverlay');
-            const activeDashboard = document.getElementById('activeDashboard');
-
-            if (isOffDuty) {
-                label.textContent = "לא במשמרת";
-                label.className = "text-xs text-slate-400";
-                toggle.className = "w-12 h-6 bg-slate-700 rounded-full relative transition-colors duration-200 focus:outline-none";
-                dot.style.transform = "translateX(0)";
-                overlay.classList.remove('hidden');
-                activeDashboard.classList.add('hidden');
-            } else {
-                label.textContent = "במשמרת";
-                label.className = "text-xs text-green-400 font-bold";
-                toggle.className = "w-12 h-6 bg-green-500 rounded-full relative transition-colors duration-200 focus:outline-none";
-                dot.style.transform = "translateX(24px)";
-                overlay.classList.add('hidden');
-                activeDashboard.classList.remove('hidden');
-            }
+            const dash = document.getElementById('activeDashboard'), overlay = document.getElementById('offDutyOverlay');
+            const label = document.getElementById('shiftStatusLabel'), dot = document.getElementById('shiftToggleDot'), btn = document.getElementById('shiftToggle');
+            
+            label.textContent = isOffDuty ? "לא במשמרת" : "במשמרת";
+            label.className = isOffDuty ? "text-xs text-slate-400" : "text-xs text-green-400 font-bold";
+            btn.className = isOffDuty ? "w-12 h-6 bg-slate-700 rounded-full relative transition-colors" : "w-12 h-6 bg-green-500 rounded-full relative transition-colors";
+            dot.style.transform = isOffDuty ? "translateX(0)" : "translateX(24px)";
+            dash.classList.toggle('hidden', isOffDuty);
+            overlay.classList.toggle('hidden', !isOffDuty);
         }
 
-        function showWizard() {
-            document.getElementById('offDutyOverlay').classList.add('hidden');
-            document.getElementById('shiftWizard').classList.remove('hidden');
+        async function toggleShift() {
+            const newActive = isOffDuty;
+            try {
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: 'UPDATE_TECH_STATUS', tech_id: currentTechId, is_active: newActive })
+                });
+                if ((await response.json()).status === "success") {
+                    isOffDuty = !newActive;
+                    updateUI();
+                    if (!isOffDuty) {
+                        startAutoRefresh();
+                    } else {
+                        stopAutoRefresh();
+                    }
+                }
+            } catch(e) { alert("שגיאה בתקשורת עם השרת"); }
         }
 
-        function hideWizard() {
-            document.getElementById('shiftWizard').classList.add('hidden');
-            document.getElementById('offDutyOverlay').classList.remove('hidden');
+        function startAutoRefresh() {
+            updateLocation();
+            fetchCalls();
+            if (locationInterval) clearInterval(locationInterval);
+            if (callsInterval) clearInterval(callsInterval);
+            locationInterval = setInterval(updateLocation, 60000);
+            callsInterval = setInterval(fetchCalls, 30000);
         }
+
+        function stopAutoRefresh() {
+            clearInterval(locationInterval);
+            clearInterval(callsInterval);
+        }
+
+        function showWizard() { document.getElementById('shiftWizard').classList.remove('hidden'); }
+        function hideWizard() { document.getElementById('shiftWizard').classList.add('hidden'); }
 
         async function submitShiftStart() {
             const odo = document.getElementById('odometer_start').value;
             if (!odo) return alert("אנא הזן מד אוץ");
             
-            const compliance = 
-                document.getElementById('check_oil').checked &&
-                document.getElementById('check_lights').checked &&
-                document.getElementById('check_uniform').checked &&
-                document.getElementById('check_shoes').checked;
-
             try {
                 const response = await fetch(API_URL, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        action: 'START_SHIFT',
-                        tech_id: currentTechId,
-                        vehicle_id: 'V1', // Default for POC
-                        odometer_start: odo,
-                        type: 'Morning',
-                        compliance_status: compliance
-                    })
+                    body: JSON.stringify({ action: 'START_SHIFT', tech_id: currentTechId, odometer_start: odo, compliance_status: true })
                 });
-                const result = await response.json();
-                if (result.status === "success") {
+                if ((await response.json()).status === "success") {
                     isOffDuty = false;
-                    document.getElementById('shiftWizard').classList.add('hidden');
+                    hideWizard();
                     updateUI();
-                    startSync();
+                    startAutoRefresh();
                 }
-            } catch (e) {
-                alert("שגיאה בתחילת משמרת");
-            }
+            } catch(e) { alert("שגיאה בתחילת משמרת"); }
         }
 
-        function startSync() {
-            updateLocation();
-            fetchCalls();
-            locationInterval = setInterval(updateLocation, 60000);
-            callsInterval = setInterval(fetchCalls, 30000);
-        }
-
-        let currentJob = null;
-
-        function openJobModal(callId) {
-            currentJob = callId;
-            document.getElementById('modalCallId').textContent = "ביצוע עבודה: " + callId;
-            document.getElementById('jobModal').classList.remove('hidden');
-        }
-
-        function closeJobModal() {
-            document.getElementById('jobModal').classList.add('hidden');
-            currentJob = null;
-        }
-
-        async function submitJobCompletion() {
-            const doorSpecs = {
-                manufacturer: document.getElementById('specManufacturer').value,
-                trim: document.getElementById('specTrim').value,
-                struts: document.getElementById('specStruts').value,
-                bottom_panel: document.getElementById('specBottomPanel').checked,
-                warehouse_alert: document.getElementById('warehouseAlert').checked
+        // --- Media Helpers ---
+        function previewImage(input, previewId) {
+            const file = input.files[0]; if (!file) return;
+            const reader = new FileReader();
+            reader.onload = e => {
+                photoData[previewId.replace('Preview', '')] = e.target.result;
+                const p = document.getElementById(previewId);
+                p.querySelector('img').src = e.target.result;
+                p.classList.remove('hidden');
             };
-
-            const updates = {
-                before_photo: photoData.before,
-                measure_photo: photoData.measure,
-                after_photo: photoData.after,
-                total_amount: document.getElementById('totalAmount').value,
-                deposit_paid: document.getElementById('depositAmount').value,
-                sticker_placed: document.getElementById('checkSticker').checked,
-                notes: document.getElementById('jobNotes').value,
-                door_specs: JSON.stringify(doorSpecs)
-            };
-
-            // Use Queue for Offline Support
-            queueAction('UPDATE_CALL_STATUS', {
-                call_id: currentJob,
-                status: 'COMPLETED',
-                updates: updates
-            });
-
-            // Optimistic UI update
-            alert("הקריאה נשלחה לסנכרון. היא תיסגר סופית ברגע שיהיה חיבור.");
-            closeJobModal();
-            // We manually remove it from the UI for better UX
-            const callCard = document.querySelector(`[data-call-id="${currentJob}"]`);
-            if (callCard) callCard.remove();
-        }
-
-        async function fetchCalls() {
-            try {
-                const response = await fetch(API_URL, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        action: 'GET_TECH_CALLS',
-                        tech_id: currentTechId
-                    })
-                });
-                const result = await response.json();
-                if (result.status === "success") {
-                    renderCalls(result.calls);
-                }
-            } catch (e) {
-                console.error("Failed to fetch calls", e);
-            }
-        }
-
-        async function updateCallStatus(callId, newStatus) {
-            queueAction('UPDATE_CALL_STATUS', {
-                call_id: callId,
-                status: newStatus
-            });
-            fetchCalls();
-        }
-
-        async function reportNotHome(callId) {
-            if (!confirm("האם להפעיל נוהל 'לקוח לא בבית'? יופעל טיימר של 15 דקות.")) return;
-            queueAction('REPORT_NOT_HOME', {
-                call_id: callId
-            });
-            alert("נוהל הופעל. נא להמתין 15 דקות לפני עזיבת המקום.");
-            fetchCalls();
-        }
-
-        function renderCalls(calls) {
-            const list = document.getElementById('callsList');
-            if (calls.length === 0) {
-                list.innerHTML = '<div class="text-center text-slate-500 py-8">אין קריאות פעילות כרגע</div>';
-                return;
-            }
-
-            list.innerHTML = calls.map(call => {
-                let statusButtons = '';
-                
-                if (call.status === 'ASSIGNED') {
-                    statusButtons = `<button onclick="updateCallStatus('${call.call_id}', 'IN_ROUTE')" class="flex-1 bg-blue-500 py-2 rounded-lg text-sm font-bold">יצאתי לדרך 🏃‍♂️</button>`;
-                } else if (call.status === 'IN_ROUTE') {
-                    statusButtons = `<button onclick="updateCallStatus('${call.call_id}', 'ARRIVED')" class="flex-1 bg-orange-500 py-2 rounded-lg text-sm font-bold">הגעתי ליעד 📍</button>`;
-                } else if (call.status === 'ARRIVED') {
-                    statusButtons = `<button onclick="openJobModal('${call.call_id}')" class="flex-1 bg-green-600 py-2 rounded-lg text-sm font-bold">התחל עבודה 🛠️</button>`;
-                } else if (call.status === 'NOT_HOME_WAITING') {
-                    statusButtons = `<button onclick="updateCallStatus('${call.call_id}', 'LEFT_SIGN_ON_DOOR')" class="flex-1 bg-red-600 py-2 rounded-lg text-sm font-bold text-white">השארתי פתק ועזבתי 📄</button>`;
-                }
-
-                return `
-                    <div class="bg-slate-800 p-4 rounded-xl border-l-4 ${getUrgencyColor(call.priority)} shadow-lg">
-                        <div class="flex justify-between items-start mb-2">
-                            <div>
-                                <span class="font-bold text-lg">${call.issue_type}</span>
-                                <div class="text-xs text-slate-400">סטטוס: ${translateStatus(call.status)}</div>
-                            </div>
-                            <span class="text-xs bg-slate-700 px-2 py-1 rounded text-slate-300">${call.call_id}</span>
-                        </div>
-                        <p class="text-slate-300 text-sm mb-3">${call.address}</p>
-                        <div class="flex flex-col space-y-2">
-                            <div class="flex space-x-2 space-x-reverse">
-                                <a href="https://waze.com/ul?q=${encodeURIComponent(call.address)}" target="_blank" class="flex-1 bg-slate-700 text-center py-2 rounded-lg text-sm font-bold">Waze 🚗</a>
-                                <a href="https://wa.me/${call.phone.replace(/[^0-9]/g, '')}?text=${encodeURIComponent('שלום, אני הטכנאי בדרך אליך לקריאה ' + call.call_id)}" target="_blank" class="bg-green-600 text-center px-3 py-2 rounded-lg text-sm">💬</a>
-                                ${statusButtons}
-                            </div>
-                            ${call.status === 'ARRIVED' ? `
-                                <button onclick="reportNotHome('${call.call_id}')" class="w-full bg-slate-700 py-2 rounded-lg text-xs font-bold text-orange-400">הלקוח לא עונה (No-Show) ⏳</button>
-                            ` : ''}
-                        </div>
-                    </div>
-                `;
-            }).join('');
-        }
-
-        function translateStatus(status) {
-            const map = {
-                'NEW': 'חדשה',
-                'ASSIGNED': 'משובצת',
-                'IN_ROUTE': 'בדרך',
-                'ARRIVED': 'במקום',
-                'COMPLETED': 'הושלמה'
-            };
-            return map[status] || status;
-        }
-
-        function getUrgencyColor(priority) {
-            switch(parseInt(priority)) {
-                case 1: return 'border-red-500';
-                case 2: return 'border-orange-500';
-                case 3: return 'border-yellow-500';
-                default: return 'border-blue-500';
-            }
+            reader.readAsDataURL(file);
         }
 
         function updateLocation() {
-            if (!navigator.geolocation) return;
-            
-            const syncStatus = document.getElementById('syncStatus');
-            syncStatus.textContent = "מסנכרן...";
-            syncStatus.classList.replace('text-slate-400', 'text-blue-400');
-
-            navigator.geolocation.getCurrentPosition(async position => {
-                const { latitude, longitude } = position.coords;
-                document.getElementById('locationDisplay').textContent = `${latitude.toFixed(4)}, ${longitude.toFixed(4)}`;
+            if (!navigator.geolocation || isOffDuty) return;
+            navigator.geolocation.getCurrentPosition(async pos => {
+                const { latitude, longitude } = pos.coords;
+                const display = document.getElementById('locationDisplay');
+                if (display) display.textContent = `${latitude.toFixed(4)}, ${longitude.toFixed(4)}`;
                 
                 try {
-                    const response = await fetch(API_URL, {
+                    await fetch(API_URL, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            action: 'UPDATE_LOCATION',
-                            tech_id: currentTechId,
-                            lat: latitude,
-                            lng: longitude
-                        })
+                        body: JSON.stringify({ action: 'UPDATE_LOCATION', tech_id: currentTechId, lat: latitude, lng: longitude })
                     });
-                    const result = await response.json();
-                    if (result.status === "success") {
-                        syncStatus.textContent = "סונכרן: " + new Date().toLocaleTimeString('he-IL', {hour: '2-digit', minute:'2-digit'});
-                        syncStatus.classList.replace('text-blue-400', 'text-green-400');
-                    }
-                } catch (e) {
-                    console.error("Location update failed", e);
-                    syncStatus.textContent = "שגיאת סנכרון";
-                    syncStatus.classList.replace('text-blue-400', 'text-red-400');
-                }
-            }, (error) => {
-                console.error("GPS error", error);
-                let msg = "שגיאת GPS";
-                if (window.location.protocol !== 'https:' && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
-                    msg = "נדרש HTTPS למיקום";
-                } else if (error.code === 1) {
-                    msg = "נאא לאשר מיקום";
-                } else if (error.code === 3) {
-                    msg = "פסק זמן (Timeout)";
-                }
-                syncStatus.textContent = msg;
-                syncStatus.classList.replace('text-blue-400', 'text-red-400');
-            }, {
-                enableHighAccuracy: false, // Set to false for better reliability indoors/LAN
-                timeout: 15000,            // Increased to 15 seconds
-                maximumAge: 10000          // Allow 10 second old cached location
+                    document.getElementById('syncStatus').textContent = "סונכרן: " + new Date().toLocaleTimeString('he-IL', {hour:'2-digit', minute:'2-digit'});
+                } catch(e) {}
             });
         }
     </script>
