@@ -1,0 +1,20 @@
+{
+  "name": "garage-crm-poc",
+  "version": "1.0.0",
+  "description": "Garage CRM POC - Local Development",
+  "scripts": {
+    "start": "live-server . --port=8080 --entry-file=index.html",
+    "server:start": "node server/index.js",
+    "serve:customer": "live-server customer-app --port=8081",
+    "serve:dispatcher": "live-server dispatcher-app --port=8082",
+    "serve:technician": "live-server technician-app --port=8083"
+  },
+  "devDependencies": {
+    "live-server": "^1.2.2"
+  },
+  "dependencies": {
+    "body-parser": "^2.2.2",
+    "cors": "^2.8.6",
+    "express": "^5.2.1"
+  }
+}

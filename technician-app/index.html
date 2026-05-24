@@ -1,0 +1,597 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ממשק טכנאי - Garage CRM</title>
+    <link rel="manifest" href="manifest.json">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Assistant:wght@300;400;700&display=swap');
+        body { font-family: 'Assistant', sans-serif; }
+    </style>
+</head>
+<body class="bg-slate-900 text-white min-h-screen p-4">
+    <script>
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('sw.js');
+        }
+    </script>
+    <div class="max-w-md mx-auto">
+        <header class="flex justify-between items-center mb-6">
+            <div>
+                <h1 class="text-xl font-bold">ממשק טכנאי</h1>
+                <span id="syncQueueBadge" class="hidden text-[10px] bg-orange-600 px-2 py-0.5 rounded-full font-bold animate-pulse mt-1 inline-block">0 ממתינים לסנכרון ⏳</span>
+            </div>
+            <div class="flex items-center space-x-3 space-x-reverse">
+                <span id="shiftStatusLabel" class="text-xs text-slate-400">לא במשמרת</span>
+                <button id="shiftToggle" onclick="toggleShift()" class="w-12 h-6 bg-slate-700 rounded-full relative transition-colors duration-200 focus:outline-none">
+                    <div id="shiftToggleDot" class="absolute left-1 top-1 bg-white w-4 h-4 rounded-full transition-transform duration-200"></div>
+                </button>
+            </div>
+        </header>
+
+        <!-- Login Section (Simplified for POC) -->
+        <div id="loginSection" class="bg-slate-800 p-6 rounded-xl shadow-xl">
+            <h2 class="text-lg mb-4 text-center">הזדהות טכנאי</h2>
+            <input type="text" id="techIdInput" placeholder="הזן מזהה טכנאי (למשל T1)" class="w-full bg-slate-700 border-none rounded-lg p-3 text-white focus:ring-2 focus:ring-blue-500 mb-4">
+            <button onclick="login()" class="w-full bg-blue-600 hover:bg-blue-700 py-3 rounded-lg font-bold transition">כניסה</button>
+        </div>
+
+        <!-- Shift Entry Wizard (Compliance Checklist) -->
+        <div id="shiftWizard" class="hidden bg-slate-800 p-6 rounded-xl shadow-xl space-y-4">
+            <h2 class="text-lg font-bold text-center border-b border-slate-700 pb-2">נוהל עלייה למשמרת 📝</h2>
+            
+            <div class="space-y-3">
+                <p class="text-sm font-semibold text-blue-400">תקינות רכב:</p>
+                <label class="flex items-center space-x-3 space-x-reverse">
+                    <input type="checkbox" id="check_oil" class="w-5 h-5 rounded bg-slate-700 border-none">
+                    <span>שמן ומים</span>
+                </label>
+                <label class="flex items-center space-x-3 space-x-reverse">
+                    <input type="checkbox" id="check_lights" class="w-5 h-5 rounded bg-slate-700 border-none">
+                    <span>אורות וצמיגים</span>
+                </label>
+                <input type="number" id="odometer_start" placeholder="מד אוץ (Vehicle Mail)" class="w-full bg-slate-700 border-none rounded-lg p-2 text-white">
+            </div>
+
+            <div class="space-y-3">
+                <p class="text-sm font-semibold text-blue-400">הופעה ייצוגית:</p>
+                <label class="flex items-center space-x-3 space-x-reverse">
+                    <input type="checkbox" id="check_uniform" class="w-5 h-5 rounded bg-slate-700 border-none">
+                    <span>חולצת לוגו ומכנס ארוך</span>
+                </label>
+                <label class="flex items-center space-x-3 space-x-reverse">
+                    <input type="checkbox" id="check_shoes" class="w-5 h-5 rounded bg-slate-700 border-none">
+                    <span>נעלי עבודה סגורות</span>
+                </label>
+            </div>
+
+            <button onclick="submitShiftStart()" class="w-full bg-green-600 hover:bg-green-700 py-3 rounded-lg font-bold transition">אשר והתחל משמרת</button>
+            <button onclick="hideWizard()" class="w-full bg-slate-700 hover:bg-slate-600 py-2 rounded-lg text-sm transition">ביטול</button>
+        </div>
+
+        <!-- Job Execution Modal -->
+        <div id="jobModal" class="hidden fixed inset-0 bg-slate-900/90 backdrop-blur-md z-50 overflow-y-auto p-4">
+            <div class="max-w-md mx-auto bg-slate-800 rounded-2xl shadow-2xl p-6 mt-10 space-y-6">
+                <div class="flex justify-between items-center border-b border-slate-700 pb-4">
+                    <h2 id="modalCallId" class="text-xl font-bold">ביצוע עבודה</h2>
+                    <button onclick="closeJobModal()" class="text-slate-400 hover:text-white">✕</button>
+                </div>
+
+                <div class="space-y-4">
+                    <div>
+                        <p class="text-sm text-blue-400 mb-2">שלב 1: תיעוד הגעה 📸</p>
+                        <div class="grid grid-cols-2 gap-3">
+                            <div class="bg-slate-700 p-3 rounded-lg text-center cursor-pointer hover:bg-slate-600 transition relative">
+                                <span class="text-xs">תמונת "לפני"</span>
+                                <input type="file" id="beforePhotoFile" accept="image/*" capture="camera" class="absolute inset-0 opacity-0 cursor-pointer" onchange="previewImage(this, 'beforePreview')">
+                                <div id="beforePreview" class="mt-2 hidden"><img src="" class="h-16 w-full object-cover rounded"></div>
+                            </div>
+                            <div class="bg-slate-700 p-3 rounded-lg text-center cursor-pointer hover:bg-slate-600 transition relative">
+                                <span class="text-xs">צילום מטר (Tape)</span>
+                                <input type="file" id="measurePhotoFile" accept="image/*" capture="camera" class="absolute inset-0 opacity-0 cursor-pointer" onchange="previewImage(this, 'measurePreview')">
+                                <div id="measurePreview" class="mt-2 hidden"><img src="" class="h-16 w-full object-cover rounded"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div>
+                        <p class="text-sm text-blue-400 mb-2">שלב 2: הצעת מחיר ומכירה 💰</p>
+                        <div class="bg-slate-700 p-4 rounded-xl space-y-3">
+                            <div class="grid grid-cols-2 gap-3">
+                                <div>
+                                    <label class="text-[10px] text-slate-400">סכום סופי (₪)</label>
+                                    <input type="number" id="totalAmount" class="w-full bg-slate-800 border-none rounded-lg p-2 text-sm" placeholder="0">
+                                </div>
+                                <div>
+                                    <label class="text-[10px] text-slate-400">מקדמה (₪)</label>
+                                    <input type="number" id="depositAmount" class="w-full bg-slate-800 border-none rounded-lg p-2 text-sm" placeholder="0">
+                                </div>
+                            </div>
+                            <label class="flex items-center space-x-3 space-x-reverse cursor-pointer">
+                                <input type="checkbox" id="checkSignature" class="w-5 h-5 rounded bg-slate-800 border-none">
+                                <span class="text-sm">חתימה דיגיטלית בוצעה ✍️</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div>
+                        <p class="text-sm text-blue-400 mb-2">שלב 3: מפרט דלת (Inventory Specs) 🚪</p>
+                        <div class="bg-slate-700 p-4 rounded-xl space-y-3">
+                            <select id="specManufacturer" class="w-full bg-slate-800 border-none rounded-lg p-2 text-sm">
+                                <option value="">יצרן (Amarr, Clopay...)</option>
+                                <option value="Amarr">Amarr</option>
+                                <option value="Clopay">Clopay</option>
+                                <option value="Safeway">Safeway</option>
+                                <option value="CHI">CHI</option>
+                                <option value="Wayne Dalton">Wayne Dalton</option>
+                            </select>
+                            <div class="grid grid-cols-2 gap-3">
+                                <input type="text" id="specTrim" placeholder="Trim (Color/Style)" class="bg-slate-800 border-none rounded-lg p-2 text-sm">
+                                <input type="number" id="specStruts" placeholder="כמות Struts" class="bg-slate-800 border-none rounded-lg p-2 text-sm">
+                            </div>
+                            <label class="flex items-center space-x-3 space-x-reverse cursor-pointer">
+                                <input type="checkbox" id="specBottomPanel" class="w-5 h-5 rounded bg-slate-800 border-none">
+                                <span class="text-sm">Bottom Panel נדרש?</span>
+                            </label>
+                            <label class="flex items-center space-x-3 space-x-reverse cursor-pointer text-orange-400">
+                                <input type="checkbox" id="warehouseAlert" class="w-5 h-5 rounded bg-slate-800 border-none">
+                                <span class="text-sm font-bold">התראת מחסן (ציוד מיוחד) ⚠️</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div>
+                        <p class="text-sm text-blue-400 mb-2">שלב 4: סיום עבודה ✅</p>
+                        <div class="bg-slate-700 p-4 rounded-xl space-y-3">
+                            <div class="bg-slate-800 p-3 rounded-lg text-center cursor-pointer hover:bg-slate-600 transition relative">
+                                <span class="text-xs">תמונת "אחרי"</span>
+                                <input type="file" id="afterPhotoFile" accept="image/*" capture="camera" class="absolute inset-0 opacity-0 cursor-pointer" onchange="previewImage(this, 'afterPreview')">
+                                <div id="afterPreview" class="mt-2 hidden"><img src="" class="h-16 w-full object-cover rounded"></div>
+                            </div>
+                            <label class="flex items-center space-x-3 space-x-reverse cursor-pointer">
+                                <input type="checkbox" id="checkSticker" class="w-5 h-5 rounded bg-slate-800 border-none">
+                                <span class="text-sm">מדבקת שירות הודבקה 🏷️</span>
+                            </label>
+                            <textarea id="jobNotes" placeholder="הערות לתיק/מחסן..." class="w-full bg-slate-800 border-none rounded-lg p-2 text-sm h-20"></textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <button onclick="submitJobCompletion()" class="w-full bg-green-600 hover:bg-green-700 py-4 rounded-xl font-bold text-lg shadow-lg transition transform active:scale-95">סיום וסגירת קריאה</button>
+            </div>
+        </div>
+
+        <!-- Main Dashboard (Hidden by default) -->
+        <div id="dashboard" class="hidden space-y-4">
+            <div id="offDutyOverlay" class="bg-slate-800/80 backdrop-blur-sm p-8 rounded-xl text-center border border-slate-700">
+                <p class="text-lg mb-4">אתה כרגע לא במשמרת</p>
+                <button onclick="showWizard()" class="bg-green-600 hover:bg-green-700 px-6 py-2 rounded-lg font-bold transition">התחל משמרת 🟢</button>
+            </div>
+
+            <div id="activeDashboard" class="hidden space-y-4">
+                <div class="bg-slate-800 p-4 rounded-xl border border-slate-700">
+                    <div class="flex justify-between items-center mb-2">
+                        <span class="text-slate-400 text-sm">מיקום וסנכרון</span>
+                        <span id="syncStatus" class="text-[10px] bg-slate-700 px-2 py-1 rounded text-slate-400">טרם סונכרן</span>
+                    </div>
+                    <div class="flex justify-between items-end">
+                        <div id="locationDisplay" class="text-sm font-mono text-slate-300">מחפש אותך... 🛰️</div>
+                        <button onclick="updateLocation()" class="text-blue-400 text-xs hover:underline">סנכרן עכשיו 🔄</button>
+                    </div>
+                    </div>
+
+                    <h2 class="text-lg font-semibold mt-6">קריאות פתוחות</h2>                <div id="callsList" class="space-y-3">
+                    <div class="text-center text-slate-500 py-8">אין קריאות פעילות כרגע</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = "http://localhost:3000/api/action";
+        let currentTechId = null;
+        let locationInterval = null;
+        let callsInterval = null;
+        let isOffDuty = true;
+        let syncQueue = JSON.parse(localStorage.getItem('syncQueue') || '[]');
+
+        const photoData = {
+            before: null,
+            measure: null,
+            after: null
+        };
+
+        // --- Offline Sync Logic ---
+        function queueAction(action, data) {
+            syncQueue.push({ id: Date.now(), action, data });
+            saveQueue();
+            attemptSync();
+        }
+
+        function saveQueue() {
+            localStorage.setItem('syncQueue', JSON.stringify(syncQueue));
+            updateSyncBadge();
+        }
+
+        async function attemptSync() {
+            if (syncQueue.length === 0) return;
+            
+            const item = syncQueue[0];
+            try {
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: item.action, ...item.data })
+                });
+                const result = await response.json();
+                
+                if (result.status === "success") {
+                    syncQueue.shift();
+                    saveQueue();
+                    attemptSync(); // Continue to next
+                }
+            } catch (e) {
+                console.log("Still offline, will retry later...");
+            }
+        }
+
+        function updateSyncBadge() {
+            const badge = document.getElementById('syncQueueBadge');
+            if (syncQueue.length > 0) {
+                badge.textContent = `${syncQueue.length} ממתינים לסנכרון ⏳`;
+                badge.classList.remove('hidden');
+            } else {
+                badge.classList.add('hidden');
+            }
+        }
+
+        setInterval(attemptSync, 10000); // Retry every 10s
+        // --------------------------
+
+        function previewImage(input, previewId) {
+            const file = input.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = e => {
+                const key = previewId.replace('Preview', '');
+                photoData[key] = e.target.result;
+                const preview = document.getElementById(previewId);
+                preview.querySelector('img').src = e.target.result;
+                preview.classList.remove('hidden');
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function login() {
+            const id = document.getElementById('techIdInput').value;
+            if (!id) return alert("אנא הזן מזהה");
+            currentTechId = id;
+            document.getElementById('loginSection').classList.add('hidden');
+            document.getElementById('dashboard').classList.remove('hidden');
+            
+            // Initial state is off duty until toggled
+            updateUI();
+        }
+
+        async function toggleShift() {
+            const newActiveStatus = isOffDuty; // If off duty (true), we want to become active (true)
+            console.log("Toggling shift. New active status:", newActiveStatus);
+            
+            try {
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        action: 'UPDATE_TECH_STATUS',
+                        tech_id: currentTechId,
+                        is_active: newActiveStatus
+                    })
+                });
+                const result = await response.json();
+                console.log("Server response:", result);
+                
+                if (result.status === "success") {
+                    isOffDuty = !newActiveStatus;
+                    updateUI();
+                    
+                    if (!isOffDuty) {
+                        // Started shift
+                        updateLocation();
+                        fetchCalls();
+                        locationInterval = setInterval(updateLocation, 60000);
+                        callsInterval = setInterval(fetchCalls, 30000);
+                    } else {
+                        // Ended shift
+                        clearInterval(locationInterval);
+                        clearInterval(callsInterval);
+                    }
+                } else {
+                    alert("שגיאה מהשרת: " + result.message);
+                }
+            } catch (e) {
+                console.error("Toggle shift error:", e);
+                alert("שגיאה בחיבור לשרת. וודא שביצעת clasp push.");
+            }
+        }
+
+        function updateUI() {
+            const label = document.getElementById('shiftStatusLabel');
+            const toggle = document.getElementById('shiftToggle');
+            const dot = document.getElementById('shiftToggleDot');
+            const overlay = document.getElementById('offDutyOverlay');
+            const activeDashboard = document.getElementById('activeDashboard');
+
+            if (isOffDuty) {
+                label.textContent = "לא במשמרת";
+                label.className = "text-xs text-slate-400";
+                toggle.className = "w-12 h-6 bg-slate-700 rounded-full relative transition-colors duration-200 focus:outline-none";
+                dot.style.transform = "translateX(0)";
+                overlay.classList.remove('hidden');
+                activeDashboard.classList.add('hidden');
+            } else {
+                label.textContent = "במשמרת";
+                label.className = "text-xs text-green-400 font-bold";
+                toggle.className = "w-12 h-6 bg-green-500 rounded-full relative transition-colors duration-200 focus:outline-none";
+                dot.style.transform = "translateX(24px)";
+                overlay.classList.add('hidden');
+                activeDashboard.classList.remove('hidden');
+            }
+        }
+
+        function showWizard() {
+            document.getElementById('offDutyOverlay').classList.add('hidden');
+            document.getElementById('shiftWizard').classList.remove('hidden');
+        }
+
+        function hideWizard() {
+            document.getElementById('shiftWizard').classList.add('hidden');
+            document.getElementById('offDutyOverlay').classList.remove('hidden');
+        }
+
+        async function submitShiftStart() {
+            const odo = document.getElementById('odometer_start').value;
+            if (!odo) return alert("אנא הזן מד אוץ");
+            
+            const compliance = 
+                document.getElementById('check_oil').checked &&
+                document.getElementById('check_lights').checked &&
+                document.getElementById('check_uniform').checked &&
+                document.getElementById('check_shoes').checked;
+
+            try {
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        action: 'START_SHIFT',
+                        tech_id: currentTechId,
+                        vehicle_id: 'V1', // Default for POC
+                        odometer_start: odo,
+                        type: 'Morning',
+                        compliance_status: compliance
+                    })
+                });
+                const result = await response.json();
+                if (result.status === "success") {
+                    isOffDuty = false;
+                    document.getElementById('shiftWizard').classList.add('hidden');
+                    updateUI();
+                    startSync();
+                }
+            } catch (e) {
+                alert("שגיאה בתחילת משמרת");
+            }
+        }
+
+        function startSync() {
+            updateLocation();
+            fetchCalls();
+            locationInterval = setInterval(updateLocation, 60000);
+            callsInterval = setInterval(fetchCalls, 30000);
+        }
+
+        let currentJob = null;
+
+        function openJobModal(callId) {
+            currentJob = callId;
+            document.getElementById('modalCallId').textContent = "ביצוע עבודה: " + callId;
+            document.getElementById('jobModal').classList.remove('hidden');
+        }
+
+        function closeJobModal() {
+            document.getElementById('jobModal').classList.add('hidden');
+            currentJob = null;
+        }
+
+        async function submitJobCompletion() {
+            const doorSpecs = {
+                manufacturer: document.getElementById('specManufacturer').value,
+                trim: document.getElementById('specTrim').value,
+                struts: document.getElementById('specStruts').value,
+                bottom_panel: document.getElementById('specBottomPanel').checked,
+                warehouse_alert: document.getElementById('warehouseAlert').checked
+            };
+
+            const updates = {
+                before_photo: photoData.before,
+                measure_photo: photoData.measure,
+                after_photo: photoData.after,
+                total_amount: document.getElementById('totalAmount').value,
+                deposit_paid: document.getElementById('depositAmount').value,
+                sticker_placed: document.getElementById('checkSticker').checked,
+                notes: document.getElementById('jobNotes').value,
+                door_specs: JSON.stringify(doorSpecs)
+            };
+
+            // Use Queue for Offline Support
+            queueAction('UPDATE_CALL_STATUS', {
+                call_id: currentJob,
+                status: 'COMPLETED',
+                updates: updates
+            });
+
+            // Optimistic UI update
+            alert("הקריאה נשלחה לסנכרון. היא תיסגר סופית ברגע שיהיה חיבור.");
+            closeJobModal();
+            // We manually remove it from the UI for better UX
+            const callCard = document.querySelector(`[data-call-id="${currentJob}"]`);
+            if (callCard) callCard.remove();
+        }
+
+        async function fetchCalls() {
+            try {
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        action: 'GET_TECH_CALLS',
+                        tech_id: currentTechId
+                    })
+                });
+                const result = await response.json();
+                if (result.status === "success") {
+                    renderCalls(result.calls);
+                }
+            } catch (e) {
+                console.error("Failed to fetch calls", e);
+            }
+        }
+
+        async function updateCallStatus(callId, newStatus) {
+            queueAction('UPDATE_CALL_STATUS', {
+                call_id: callId,
+                status: newStatus
+            });
+            fetchCalls();
+        }
+
+        async function reportNotHome(callId) {
+            if (!confirm("האם להפעיל נוהל 'לקוח לא בבית'? יופעל טיימר של 15 דקות.")) return;
+            queueAction('REPORT_NOT_HOME', {
+                call_id: callId
+            });
+            alert("נוהל הופעל. נא להמתין 15 דקות לפני עזיבת המקום.");
+            fetchCalls();
+        }
+
+        function renderCalls(calls) {
+            const list = document.getElementById('callsList');
+            if (calls.length === 0) {
+                list.innerHTML = '<div class="text-center text-slate-500 py-8">אין קריאות פעילות כרגע</div>';
+                return;
+            }
+
+            list.innerHTML = calls.map(call => {
+                let statusButtons = '';
+                
+                if (call.status === 'ASSIGNED') {
+                    statusButtons = `<button onclick="updateCallStatus('${call.call_id}', 'IN_ROUTE')" class="flex-1 bg-blue-500 py-2 rounded-lg text-sm font-bold">יצאתי לדרך 🏃‍♂️</button>`;
+                } else if (call.status === 'IN_ROUTE') {
+                    statusButtons = `<button onclick="updateCallStatus('${call.call_id}', 'ARRIVED')" class="flex-1 bg-orange-500 py-2 rounded-lg text-sm font-bold">הגעתי ליעד 📍</button>`;
+                } else if (call.status === 'ARRIVED') {
+                    statusButtons = `<button onclick="openJobModal('${call.call_id}')" class="flex-1 bg-green-600 py-2 rounded-lg text-sm font-bold">התחל עבודה 🛠️</button>`;
+                } else if (call.status === 'NOT_HOME_WAITING') {
+                    statusButtons = `<button onclick="updateCallStatus('${call.call_id}', 'LEFT_SIGN_ON_DOOR')" class="flex-1 bg-red-600 py-2 rounded-lg text-sm font-bold text-white">השארתי פתק ועזבתי 📄</button>`;
+                }
+
+                return `
+                    <div class="bg-slate-800 p-4 rounded-xl border-l-4 ${getUrgencyColor(call.priority)} shadow-lg">
+                        <div class="flex justify-between items-start mb-2">
+                            <div>
+                                <span class="font-bold text-lg">${call.issue_type}</span>
+                                <div class="text-xs text-slate-400">סטטוס: ${translateStatus(call.status)}</div>
+                            </div>
+                            <span class="text-xs bg-slate-700 px-2 py-1 rounded text-slate-300">${call.call_id}</span>
+                        </div>
+                        <p class="text-slate-300 text-sm mb-3">${call.address}</p>
+                        <div class="flex flex-col space-y-2">
+                            <div class="flex space-x-2 space-x-reverse">
+                                <a href="https://waze.com/ul?q=${encodeURIComponent(call.address)}" target="_blank" class="flex-1 bg-slate-700 text-center py-2 rounded-lg text-sm font-bold">Waze 🚗</a>
+                                <a href="https://wa.me/${call.phone.replace(/[^0-9]/g, '')}?text=${encodeURIComponent('שלום, אני הטכנאי בדרך אליך לקריאה ' + call.call_id)}" target="_blank" class="bg-green-600 text-center px-3 py-2 rounded-lg text-sm">💬</a>
+                                ${statusButtons}
+                            </div>
+                            ${call.status === 'ARRIVED' ? `
+                                <button onclick="reportNotHome('${call.call_id}')" class="w-full bg-slate-700 py-2 rounded-lg text-xs font-bold text-orange-400">הלקוח לא עונה (No-Show) ⏳</button>
+                            ` : ''}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function translateStatus(status) {
+            const map = {
+                'NEW': 'חדשה',
+                'ASSIGNED': 'משובצת',
+                'IN_ROUTE': 'בדרך',
+                'ARRIVED': 'במקום',
+                'COMPLETED': 'הושלמה'
+            };
+            return map[status] || status;
+        }
+
+        function getUrgencyColor(priority) {
+            switch(parseInt(priority)) {
+                case 1: return 'border-red-500';
+                case 2: return 'border-orange-500';
+                case 3: return 'border-yellow-500';
+                default: return 'border-blue-500';
+            }
+        }
+
+        function updateLocation() {
+            if (!navigator.geolocation) return;
+            
+            const syncStatus = document.getElementById('syncStatus');
+            syncStatus.textContent = "מסנכרן...";
+            syncStatus.classList.replace('text-slate-400', 'text-blue-400');
+
+            navigator.geolocation.getCurrentPosition(async position => {
+                const { latitude, longitude } = position.coords;
+                document.getElementById('locationDisplay').textContent = `${latitude.toFixed(4)}, ${longitude.toFixed(4)}`;
+                
+                try {
+                    const response = await fetch(API_URL, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            action: 'UPDATE_LOCATION',
+                            tech_id: currentTechId,
+                            lat: latitude,
+                            lng: longitude
+                        })
+                    });
+                    const result = await response.json();
+                    if (result.status === "success") {
+                        syncStatus.textContent = "סונכרן: " + new Date().toLocaleTimeString('he-IL', {hour: '2-digit', minute:'2-digit'});
+                        syncStatus.classList.replace('text-blue-400', 'text-green-400');
+                    }
+                } catch (e) {
+                    console.error("Location update failed", e);
+                    syncStatus.textContent = "שגיאת סנכרון";
+                    syncStatus.classList.replace('text-blue-400', 'text-red-400');
+                }
+            }, (error) => {
+                console.error("GPS error", error);
+                let msg = "שגיאת GPS";
+                if (window.location.protocol !== 'https:' && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
+                    msg = "נדרש HTTPS למיקום";
+                } else if (error.code === 1) {
+                    msg = "נאא לאשר מיקום";
+                } else if (error.code === 3) {
+                    msg = "פסק זמן (Timeout)";
+                }
+                syncStatus.textContent = msg;
+                syncStatus.classList.replace('text-blue-400', 'text-red-400');
+            }, {
+                enableHighAccuracy: false, // Set to false for better reliability indoors/LAN
+                timeout: 15000,            // Increased to 15 seconds
+                maximumAge: 10000          // Allow 10 second old cached location
+            });
+        }
+    </script>
+</body>
+</html>

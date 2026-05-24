@@ -1,0 +1,1234 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ניהול קריאות - Dispatcher Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Assistant:wght@300;400;700&display=swap');
+        body { font-family: 'Assistant', sans-serif; }
+        #map { height: 400px; border-radius: 12px; }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen p-6">
+    <div class="max-w-6xl mx-auto">
+        <header class="flex justify-between items-center mb-8 bg-white p-6 rounded-xl shadow-sm">
+            <h1 class="text-2xl font-bold text-slate-800">לוח בקרה דיספצ'ר</h1>
+            <div class="flex space-x-4 space-x-reverse">
+                <span id="lastUpdate" class="text-sm text-gray-500 self-center">עדכון אחרון: --:--</span>
+                <button onclick="loadData()" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition">רענן נתונים 🔄</button>
+            </div>
+        </header>
+
+        <!-- KPI Bar -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+            <div class="bg-white p-6 rounded-xl shadow-sm border-b-4 border-blue-500">
+                <div class="text-sm text-gray-500">קריאות חדשות</div>
+                <div id="kpiNew" class="text-3xl font-bold">0</div>
+            </div>
+            <div class="bg-white p-6 rounded-xl shadow-sm border-b-4 border-orange-500">
+                <div class="text-sm text-gray-500">בטיפול</div>
+                <div id="kpiInProgress" class="text-3xl font-bold">0</div>
+            </div>
+            <div class="bg-white p-6 rounded-xl shadow-sm border-b-4 border-green-500">
+                <div class="text-sm text-gray-500">הושלמו היום</div>
+                <div id="kpiCompleted" class="text-3xl font-bold">0</div>
+            </div>
+            <div class="bg-white p-6 rounded-xl shadow-sm border-b-4 border-slate-500">
+                <div class="text-sm text-gray-500">טכנאים במשמרת</div>
+                <div id="kpiActiveTechs" class="text-3xl font-bold">0</div>
+            </div>
+        </div>
+
+        <!-- Tab System -->
+        <div class="flex space-x-4 space-x-reverse mb-6 border-b border-gray-300 pb-px">
+            <button onclick="switchTab('calls')" id="tabCalls" class="px-6 py-2 font-bold border-b-2 border-blue-600 text-blue-600 transition">קריאות וטכנאים</button>
+            <button onclick="switchTab('fleet')" id="tabFleet" class="px-6 py-2 font-bold text-gray-500 border-b-2 border-transparent hover:text-blue-600 transition">צי רכב (Fleet)</button>
+            <button onclick="switchTab('notifications')" id="tabNotifications" class="px-6 py-2 font-bold text-gray-500 border-b-2 border-transparent hover:text-blue-600 transition">התראות (SMS)</button>
+            <button onclick="switchTab('audit')" id="tabAudit" class="px-6 py-2 font-bold text-gray-500 border-b-2 border-transparent hover:text-blue-600 transition">ביקורת פרוטוקול (Audit)</button>
+            <button onclick="switchTab('technicians')" id="tabTechnicians" class="px-6 py-2 font-bold text-gray-500 border-b-2 border-transparent hover:text-blue-600 transition">ניהול טכנאים (Users)</button>
+            <button onclick="switchTab('customers')" id="tabCustomers" class="px-6 py-2 font-bold text-gray-500 border-b-2 border-transparent hover:text-blue-600 transition">ניהול לקוחות (End Users)</button>
+            <button onclick="switchTab('financials')" id="tabFinancials" class="px-6 py-2 font-bold text-gray-500 border-b-2 border-transparent hover:text-blue-600 transition">כספים (Financials)</button>
+            <button onclick="switchTab('inventory')" id="tabInventory" class="px-6 py-2 font-bold text-gray-500 border-b-2 border-transparent hover:text-blue-600 transition">מלאי ומפרטים (Inventory)</button>
+            <button onclick="switchTab('performance')" id="tabPerformance" class="px-6 py-2 font-bold text-gray-500 border-b-2 border-transparent hover:text-blue-600 transition">ביצועים (Performance)</button>
+        </div>
+
+        <div id="callsSection">
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+                <!-- Map Section -->
+                <div class="lg:col-span-2 bg-white p-4 rounded-xl shadow-sm">
+                    <div class="font-bold mb-4">מפת קריאות וטכנאים חיה</div>
+                    <div id="map"></div>
+                </div>
+
+                <!-- Technicians Status -->
+                <div class="bg-white rounded-xl shadow-sm overflow-hidden">
+                    <div class="p-4 bg-slate-50 border-b font-bold">סטטוס טכנאים</div>
+                    <div id="techList" class="divide-y">
+                        <!-- Techs will be rendered here -->
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 gap-6">
+                <!-- Calls Table -->
+                <div class="bg-white rounded-xl shadow-sm overflow-hidden">
+                    <div class="p-4 bg-slate-50 border-b font-bold">קריאות שירות אחרונות</div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-right border-collapse">
+                            <thead>
+                                <tr class="bg-slate-100 text-slate-600 text-sm">
+                                    <th class="p-4">מזהה</th>
+                                    <th class="p-4">סוג תקלה</th>
+                                    <th class="p-4">כתובת</th>
+                                    <th class="p-4">דחיפות</th>
+                                    <th class="p-4">טכנאי</th>
+                                    <th class="p-4">ETA</th>
+                                    <th class="p-4">סכום</th>
+                                    <th class="p-4">סטטוס</th>
+                                    <th class="p-4">פעולות</th>
+                                </tr>
+                            </thead>
+                            <tbody id="callsBody">
+                                <tr><td colspan="9" class="p-8 text-center text-slate-400">טוען נתונים...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="fleetSection" class="hidden">
+            <div class="bg-white rounded-xl shadow-sm overflow-hidden">
+                <div class="p-4 bg-slate-50 border-b font-bold">ניהול צי רכב</div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-right border-collapse">
+                        <thead>
+                            <tr class="bg-slate-100 text-slate-600 text-sm">
+                                <th class="p-4">מזהה רכב</th>
+                                <th class="p-4">מספר רישוי</th>
+                                <th class="p-4">מד אוץ (Vehicle Mail)</th>
+                                <th class="p-4">שמן אחרון</th>
+                                <th class="p-4">מים אחרון</th>
+                                <th class="p-4">סטטוס</th>
+                            </tr>
+                        </thead>
+                        <tbody id="fleetBody">
+                            <!-- Fleet data here -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div id="notificationsSection" class="hidden">
+            <div class="bg-white rounded-xl shadow-sm overflow-hidden">
+                <div class="p-4 bg-slate-50 border-b font-bold">יומן התראות (SMS Log)</div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-right border-collapse">
+                        <thead>
+                            <tr class="bg-slate-100 text-slate-600 text-sm">
+                                <th class="p-4">זמן</th>
+                                <th class="p-4">נמען</th>
+                                <th class="p-4">הודעה</th>
+                                <th class="p-4">סוג</th>
+                            </tr>
+                        </thead>
+                        <tbody id="notificationsBody">
+                            <!-- Notifications data here -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div id="auditSection" class="hidden">
+            <div class="bg-white rounded-xl shadow-sm overflow-hidden">
+                <div class="p-4 bg-slate-50 border-b font-bold">ביקורת פרוטוקול עבודה (Protocol Audit Trail)</div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-right border-collapse">
+                        <thead>
+                            <tr class="bg-slate-100 text-slate-600 text-sm">
+                                <th class="p-4">זמן</th>
+                                <th class="p-4">סוג אירוע</th>
+                                <th class="p-4">פרטים</th>
+                            </tr>
+                        </thead>
+                        <tbody id="auditBody">
+                            <!-- Audit logs here -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div id="techniciansSection" class="hidden">
+            <div class="bg-white rounded-xl shadow-sm overflow-hidden">
+                <div class="p-4 bg-slate-50 border-b flex justify-between items-center">
+                    <span class="font-bold">ניהול טכנאים ומשתמשים</span>
+                    <button onclick="openTechModal()" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-blue-700 transition">הוסף טכנאי חדש +</button>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-right border-collapse">
+                        <thead>
+                            <tr class="bg-slate-100 text-slate-600 text-sm">
+                                <th class="p-4">מזהה</th>
+                                <th class="p-4">שם הטכנאי</th>
+                                <th class="p-4">טלפון</th>
+                                <th class="p-4">התמחויות</th>
+                                <th class="p-4">עמלה (%)</th>
+                                <th class="p-4">סטטוס</th>
+                                <th class="p-4">פעולות</th>
+                            </tr>
+                        </thead>
+                        <tbody id="techniciansTableBody">
+                            <!-- Tech users here -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div id="customersSection" class="hidden">
+            <div class="bg-white rounded-xl shadow-sm overflow-hidden">
+                <div class="p-4 bg-slate-50 border-b flex justify-between items-center">
+                    <span class="font-bold">ניהול לקוחות (End Users)</span>
+                    <button onclick="openCustomerModal()" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-blue-700 transition">הוסף לקוח חדש +</button>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-right border-collapse">
+                        <thead>
+                            <tr class="bg-slate-100 text-slate-600 text-sm">
+                                <th class="p-4">מזהה לקוח</th>
+                                <th class="p-4">שם פרטי</th>
+                                <th class="p-4">שם משפחה</th>
+                                <th class="p-4">טלפון</th>
+                                <th class="p-4">דוא"ל</th>
+                                <th class="p-4">כתובת</th>
+                                <th class="p-4">פעולות</th>
+                            </tr>
+                        </thead>
+                        <tbody id="customersTableBody">
+                            <!-- Customers here -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div id="financialsSection" class="hidden">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="bg-white rounded-xl shadow-sm overflow-hidden">
+                    <div class="p-4 bg-slate-50 border-b font-bold">סיכום הכנסות ורווחים</div>
+                    <div class="p-6 space-y-4" id="financialSummary">
+                        <!-- Revenue summary cards -->
+                    </div>
+                </div>
+                <div class="bg-white rounded-xl shadow-sm overflow-hidden">
+                    <div class="p-4 bg-slate-50 border-b font-bold">תגמולי טכנאים (Commissions)</div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-right border-collapse text-sm">
+                            <thead>
+                                <tr class="bg-slate-100">
+                                    <th class="p-4">טכנאי</th>
+                                    <th class="p-4">מכירות (₪)</th>
+                                    <th class="p-4">עמלה (₪)</th>
+                                    <th class="p-4">סטטוס</th>
+                                </tr>
+                            </thead>
+                            <tbody id="commissionsBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="performanceSection" class="hidden">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                <div class="bg-white p-6 rounded-xl shadow-sm border-t-4 border-indigo-500">
+                    <div class="text-xs text-gray-500 font-bold uppercase">זמן הגעה ממוצע (דקות)</div>
+                    <div id="avgArrivalTime" class="text-3xl font-bold mt-2">--</div>
+                </div>
+                <div class="bg-white p-6 rounded-xl shadow-sm border-t-4 border-pink-500">
+                    <div class="text-xs text-gray-500 font-bold uppercase">יחס המרה (מכירות/קריאות)</div>
+                    <div id="conversionRate" class="text-3xl font-bold mt-2">--</div>
+                </div>
+                <div class="bg-white p-6 rounded-xl shadow-sm border-t-4 border-cyan-500">
+                    <div class="text-xs text-gray-500 font-bold uppercase">מרחק נסיעה יומי ממוצע</div>
+                    <div id="avgDailyKm" class="text-3xl font-bold mt-2">--</div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="bg-white rounded-xl shadow-sm overflow-hidden">
+                    <div class="p-4 bg-slate-50 border-b font-bold">דירוג יעילות טכנאים</div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-right border-collapse text-sm">
+                            <thead>
+                                <tr class="bg-slate-100">
+                                    <th class="p-4">טכנאי</th>
+                                    <th class="p-4">קריאות</th>
+                                    <th class="p-4">זמן תגובה ממוצע</th>
+                                    <th class="p-4">ציון</th>
+                                </tr>
+                            </thead>
+                            <tbody id="techPerformanceBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="bg-white rounded-xl shadow-sm overflow-hidden p-6">
+                    <div class="font-bold mb-4">ניתוח דחיפות קריאות</div>
+                    <div id="priorityChart" class="flex items-end justify-around h-48 pt-10">
+                        <!-- Bar chart elements will be injected here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Details Modal -->
+        <div id="detailsModal" class="hidden fixed inset-0 bg-slate-900/80 backdrop-blur-sm z-50 overflow-y-auto p-4">
+            <div class="max-w-2xl mx-auto bg-white rounded-2xl shadow-2xl p-6 mt-10 space-y-6 text-slate-800">
+                <div class="flex justify-between items-center border-b pb-4">
+                    <h2 id="detailTitle" class="text-xl font-bold">פרטי קריאה</h2>
+                    <button onclick="closeDetailsModal()" class="text-slate-400 hover:text-slate-600">✕</button>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="space-y-4">
+                        <div>
+                            <h3 class="font-bold text-blue-600 border-b mb-2">מידע כללי</h3>
+                            <div id="generalDetails" class="text-sm space-y-1"></div>
+                        </div>
+                        <div>
+                            <h3 class="font-bold text-green-600 border-b mb-2">פיננסי</h3>
+                            <div id="financialDetails" class="text-sm space-y-1"></div>
+                        </div>
+                        <div>
+                            <h3 class="font-bold text-orange-600 border-b mb-2">מפרט דלת</h3>
+                            <div id="doorDetails" class="text-sm space-y-1"></div>
+                        </div>
+                    </div>
+                    <div class="space-y-4">
+                        <h3 class="font-bold text-slate-600 border-b">תיעוד מהשטח</h3>
+                        <div id="photoDetails" class="grid grid-cols-1 gap-4"></div>
+                    </div>
+                </div>
+
+                <div class="border-t pt-4">
+                    <h3 class="font-bold text-slate-600 mb-2">הערות טכנאי</h3>
+                    <p id="detailNotes" class="text-sm bg-slate-50 p-3 rounded-lg italic"></p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Customer Management Modal -->
+        <div id="customerModal" class="hidden fixed inset-0 bg-slate-900/80 backdrop-blur-sm z-50 overflow-y-auto p-4">
+            <div class="max-w-md mx-auto bg-white rounded-2xl shadow-2xl p-6 mt-10 space-y-6 text-slate-800">
+                <div class="flex justify-between items-center border-b pb-4">
+                    <h2 id="customerModalTitle" class="text-xl font-bold">הוספת לקוח חדש</h2>
+                    <button onclick="closeCustomerModal()" class="text-slate-400 hover:text-slate-600">✕</button>
+                </div>
+
+                <form onsubmit="saveCustomer(event)" class="space-y-4">
+                    <input type="hidden" name="customer_id" id="edit_cust_id">
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">שם פרטי</label>
+                            <input type="text" name="first_name" id="edit_cust_first" required class="mt-1 block w-full border-gray-300 rounded-md shadow-sm p-2 border">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">שם משפחה</label>
+                            <input type="text" name="last_name" id="edit_cust_last" required class="mt-1 block w-full border-gray-300 rounded-md shadow-sm p-2 border">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">טלפון</label>
+                        <input type="tel" name="phone" id="edit_cust_phone" required class="mt-1 block w-full border-gray-300 rounded-md shadow-sm p-2 border">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">דוא"ל</label>
+                        <input type="email" name="email" id="edit_cust_email" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm p-2 border">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">כתובת</label>
+                        <input type="text" name="address" id="edit_cust_address" required class="mt-1 block w-full border-gray-300 rounded-md shadow-sm p-2 border">
+                    </div>
+                    <div class="pt-4 flex space-x-2 space-x-reverse">
+                        <button type="submit" class="flex-1 bg-blue-600 text-white font-bold py-2 rounded-lg hover:bg-blue-700 transition">שמור</button>
+                        <button type="button" onclick="closeCustomerModal()" class="flex-1 bg-gray-100 text-gray-700 font-bold py-2 rounded-lg hover:bg-gray-200 transition">ביטול</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Edit Call Modal -->
+        <div id="editCallModal" class="hidden fixed inset-0 bg-slate-900/80 backdrop-blur-sm z-50 overflow-y-auto p-4">
+            <div class="max-w-md mx-auto bg-white rounded-2xl shadow-2xl p-6 mt-10 space-y-6 text-slate-800">
+                <div class="flex justify-between items-center border-b pb-4">
+                    <h2 class="text-xl font-bold">עריכת קריאה</h2>
+                    <button onclick="closeEditCallModal()" class="text-slate-400 hover:text-slate-600">✕</button>
+                </div>
+
+                <form onsubmit="saveCallUpdates(event)" class="space-y-4">
+                    <input type="hidden" name="call_id" id="edit_call_id">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">כתובת</label>
+                        <input type="text" name="address" id="edit_call_address" required class="mt-1 block w-full border-gray-300 rounded-md shadow-sm p-2 border">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">דחיפות (1-4)</label>
+                        <select name="priority" id="edit_call_priority" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm p-2 border">
+                            <option value="1">P1 - חירום</option>
+                            <option value="2">P2 - גבוהה</option>
+                            <option value="3">P3 - רגילה</option>
+                            <option value="4">P4 - נמוכה</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">סטטוס</label>
+                        <select name="status" id="edit_call_status" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm p-2 border">
+                            <option value="NEW">חדשה</option>
+                            <option value="ASSIGNED">משובצת</option>
+                            <option value="IN_ROUTE">בדרך</option>
+                            <option value="ARRIVED">במקום</option>
+                            <option value="COMPLETED">הושלמה</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">הערות</label>
+                        <textarea name="notes" id="edit_call_notes" rows="3" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm p-2 border"></textarea>
+                    </div>
+                    <div class="pt-4 flex space-x-2 space-x-reverse">
+                        <button type="submit" class="flex-1 bg-blue-600 text-white font-bold py-2 rounded-lg hover:bg-blue-700 transition">עדכן קריאה</button>
+                        <button type="button" onclick="closeEditCallModal()" class="flex-1 bg-gray-100 text-gray-700 font-bold py-2 rounded-lg hover:bg-gray-200 transition">ביטול</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Technician Management Modal -->
+        <div id="techModal" class="hidden fixed inset-0 bg-slate-900/80 backdrop-blur-sm z-50 overflow-y-auto p-4">
+            <div class="max-w-md mx-auto bg-white rounded-2xl shadow-2xl p-6 mt-10 space-y-6 text-slate-800">
+                <div class="flex justify-between items-center border-b pb-4">
+                    <h2 id="techModalTitle" class="text-xl font-bold">הוספת טכנאי חדש</h2>
+                    <button onclick="closeTechModal()" class="text-slate-400 hover:text-slate-600">✕</button>
+                </div>
+
+                <form onsubmit="saveTechnician(event)" class="space-y-4">
+                    <input type="hidden" name="tech_id" id="edit_tech_id">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">שם מלא</label>
+                        <input type="text" name="name" id="edit_tech_name" required class="mt-1 block w-full border-gray-300 rounded-md shadow-sm p-2 border">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">טלפון</label>
+                        <input type="tel" name="phone" id="edit_tech_phone" required class="mt-1 block w-full border-gray-300 rounded-md shadow-sm p-2 border">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">התמחויות (מופרד בפסיקים)</label>
+                        <input type="text" name="specialties" id="edit_tech_specialties" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm p-2 border" placeholder="Overhead, Roll-up, Gates">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">עמלה (0.1 = 10%)</label>
+                        <input type="number" step="0.01" name="commission_rate" id="edit_tech_commission" required class="mt-1 block w-full border-gray-300 rounded-md shadow-sm p-2 border">
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">קו רוחב (Home Lat)</label>
+                            <input type="number" step="any" name="home_lat" id="edit_tech_lat" required class="mt-1 block w-full border-gray-300 rounded-md shadow-sm p-2 border">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">קו אורך (Home Lng)</label>
+                            <input type="number" step="any" name="home_lng" id="edit_tech_lng" required class="mt-1 block w-full border-gray-300 rounded-md shadow-sm p-2 border">
+                        </div>
+                    </div>
+                    <div class="pt-4 flex space-x-2 space-x-reverse">
+                        <button type="submit" class="flex-1 bg-blue-600 text-white font-bold py-2 rounded-lg hover:bg-blue-700 transition">שמור</button>
+                        <button type="button" onclick="closeTechModal()" class="flex-1 bg-gray-100 text-gray-700 font-bold py-2 rounded-lg hover:bg-gray-200 transition">ביטול</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = "http://localhost:3000/api/action";
+        let technicians = [];
+        let calls = [];
+        let fleet = [];
+        let notifications = [];
+        let auditLogs = [];
+        let map, markers = [];
+
+        function switchTab(tab) {
+            document.getElementById('callsSection').classList.add('hidden');
+            document.getElementById('fleetSection').classList.add('hidden');
+            document.getElementById('notificationsSection').classList.add('hidden');
+            document.getElementById('auditSection').classList.add('hidden');
+            document.getElementById('financialsSection').classList.add('hidden');
+            document.getElementById('inventorySection').classList.add('hidden');
+            
+            document.querySelectorAll('.flex.space-x-4 button').forEach(btn => {
+                btn.className = "px-6 py-2 font-bold text-gray-500 border-b-2 border-transparent hover:text-blue-600 transition";
+            });
+
+            const activeTab = document.getElementById('tab' + tab.charAt(0).toUpperCase() + tab.slice(1));
+            if (activeTab) activeTab.className = "px-6 py-2 font-bold border-b-2 border-blue-600 text-blue-600 transition";
+
+            if (tab === 'calls') {
+                document.getElementById('callsSection').classList.remove('hidden');
+            } else if (tab === 'fleet') {
+                document.getElementById('fleetSection').classList.remove('hidden');
+                renderFleetList();
+            } else if (tab === 'notifications') {
+                document.getElementById('notificationsSection').classList.remove('hidden');
+                renderNotifications();
+            } else if (tab === 'audit') {
+                document.getElementById('auditSection').classList.remove('hidden');
+                renderAuditLogs();
+            } else if (tab === 'financials') {
+                document.getElementById('financialsSection').classList.remove('hidden');
+                renderFinancials();
+            } else if (tab === 'inventory') {
+                document.getElementById('inventorySection').classList.remove('hidden');
+                renderInventory();
+            } else if (tab === 'performance') {
+                document.getElementById('performanceSection').classList.remove('hidden');
+                renderPerformance();
+            } else if (tab === 'technicians') {
+                document.getElementById('techniciansSection').classList.remove('hidden');
+                renderTechniciansTable();
+            } else if (tab === 'customers') {
+                document.getElementById('customersSection').classList.remove('hidden');
+                renderCustomersTable();
+            }
+        }
+
+        async function loadData() {
+            try {
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: 'GET_ALL_DATA' })
+                });
+                const result = await response.json();
+                if (result.status === "success") {
+                    technicians = result.technicians;
+                    calls = result.calls; 
+                    notifications = result.notifications || [];
+                    auditLogs = result.assignments_log || [];
+                    fleet = result.fleet || [];
+                    customers = result.customers || []; // Ensure customers are loaded
+                    renderKPIs();
+                    renderTechList();
+                    renderCallsTable();
+                    renderNotifications();
+                    renderAuditLogs();
+                    renderFinancials();
+                    renderInventory();
+                    renderPerformance();
+                    renderTechniciansTable();
+                    renderCustomersTable();
+                    updateMap();
+                    document.getElementById('lastUpdate').textContent = `עדכון אחרון: ${new Date().toLocaleTimeString('he-IL')}`;
+                }
+            } catch (e) {
+                console.error(e);
+            }
+        }
+
+        function renderCustomersTable() {
+            const body = document.getElementById('customersTableBody');
+            if (!body) return;
+            body.innerHTML = (customers || []).map(c => `
+                <tr class="border-b hover:bg-slate-50 transition">
+                    <td class="p-4 font-mono text-xs">${c.customer_id}</td>
+                    <td class="p-4 font-bold text-sm">${c.first_name}</td>
+                    <td class="p-4 font-bold text-sm">${c.last_name}</td>
+                    <td class="p-4 text-sm">${c.phone}</td>
+                    <td class="p-4 text-sm">${c.email || '-'}</td>
+                    <td class="p-4 text-xs text-gray-500">${c.address}</td>
+                    <td class="p-4 space-x-2 space-x-reverse">
+                        <button onclick="editCustomer('${c.customer_id}')" class="text-blue-600 hover:underline text-xs">ערוך</button>
+                        <button onclick="deleteCustomer('${c.customer_id}')" class="text-red-600 hover:underline text-xs">מחק</button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function openCustomerModal(customerId = null) {
+            const customer = customerId ? customers.find(c => c.customer_id === customerId) : {
+                customer_id: "", first_name: "", last_name: "", phone: "", email: "", address: ""
+            };
+
+            document.getElementById('customerModalTitle').textContent = customerId ? "עריכת לקוח" : "הוספת לקוח חדש";
+            document.getElementById('edit_cust_id').value = customer.customer_id;
+            document.getElementById('edit_cust_first').value = customer.first_name;
+            document.getElementById('edit_cust_last').value = customer.last_name;
+            document.getElementById('edit_cust_phone').value = customer.phone;
+            document.getElementById('edit_cust_email').value = customer.email;
+            document.getElementById('edit_cust_address').value = customer.address;
+
+            document.getElementById('customerModal').classList.remove('hidden');
+        }
+
+        function closeCustomerModal() {
+            document.getElementById('customerModal').classList.add('hidden');
+        }
+
+        async function saveCustomer(e) {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+            const custData = Object.fromEntries(formData.entries());
+            if (!custData.customer_id) delete custData.customer_id;
+
+            try {
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: 'SAVE_CUSTOMER', customer: custData })
+                });
+                const result = await response.json();
+                if (result.status === "success") {
+                    closeCustomerModal();
+                    loadData();
+                }
+            } catch (e) { console.error(e); }
+        }
+
+        function editCustomer(id) { openCustomerModal(id); }
+
+        async function deleteCustomer(id) {
+            if (!confirm("האם למחוק לקוח זה?")) return;
+            try {
+                await fetch(API_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: 'DELETE_CUSTOMER', customer_id: id })
+                });
+                loadData();
+            } catch (e) { console.error(e); }
+        }
+
+        function openEditCallModal(callId) {
+            const call = calls.find(c => c.call_id === callId);
+            if (!call) return;
+
+            document.getElementById('edit_call_id').value = call.call_id;
+            document.getElementById('edit_call_address').value = call.address;
+            document.getElementById('edit_call_priority').value = call.priority;
+            document.getElementById('edit_call_notes').value = call.notes || "";
+            document.getElementById('edit_call_status').value = call.status;
+
+            document.getElementById('editCallModal').classList.remove('hidden');
+        }
+
+        function closeEditCallModal() {
+            document.getElementById('editCallModal').classList.add('hidden');
+        }
+
+        async function saveCallUpdates(e) {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+            const callUpdates = Object.fromEntries(formData.entries());
+            
+            const originalCall = calls.find(c => c.call_id === callUpdates.call_id);
+            const updatedCall = { ...originalCall, ...callUpdates };
+            updatedCall.priority = parseInt(updatedCall.priority);
+
+            try {
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: 'SAVE_CALL', call: updatedCall })
+                });
+                const result = await response.json();
+                if (result.status === "success") {
+                    closeEditCallModal();
+                    loadData();
+                }
+            } catch (e) { console.error(e); }
+        }
+
+        function renderCallsTable() {
+            const body = document.getElementById('callsBody');
+            body.innerHTML = calls.map(call => {
+                // Calculate proximity for each technician relative to this call
+                const sortedTechs = technicians.map(t => {
+                    const dist = (call.lat && call.lng && t.current_lat && t.current_lng)
+                        ? haversineDistance(call.lat, call.lng, t.current_lat, t.current_lng)
+                        : Infinity;
+                    return { ...t, distance: dist };
+                }).sort((a, b) => a.distance - b.distance);
+
+                return `
+                <tr class="border-b hover:bg-slate-50 transition">
+                    <td class="p-4 font-mono text-[10px]">${call.call_id}</td>
+                    <td class="p-4 font-bold text-sm">${call.issue_type || '-'}</td>
+                    <td class="p-4 text-xs">${call.address}</td>
+                    <td class="p-4"><span class="px-2 py-1 rounded text-[10px] font-bold ${getUrgencyClass(call.priority)}">P${call.priority}</span></td>
+                    <td class="p-4">
+                        <div class="relative group">
+                            <select onchange="manualAssign('${call.call_id}', this.value)" 
+                                    onfocus="fetchSmartRecommendations('${call.call_id}', this)"
+                                    class="text-xs border rounded p-1 max-w-[150px] pr-6 bg-white appearance-none">
+                                <option value="">בחר טכנאי...</option>
+                                ${sortedTechs.map(t => `
+                                    <option value="${t.name}" ${call.assigned_technician === t.name ? 'selected' : ''}>
+                                        ${t.name}
+                                    </option>
+                                `).join('')}
+                            </select>
+                            <div class="absolute left-2 top-2 pointer-events-none">✨</div>
+                        </div>
+                    </td>
+                    <td class="p-4">
+                        <input type="text" value="${call.eta || ''}" 
+                               onblur="updateETA('${call.call_id}', this.value)" 
+                               placeholder="30m" 
+                               class="text-xs border rounded p-1 w-12">
+                    </td>
+                    <td class="p-4 font-bold text-xs">₪${call.total_amount || 0}</td>
+                    <td class="p-4"><span class="text-[10px] font-bold ${getStatusColor(call.status)}">${translateStatus(call.status)}</span></td>
+                    <td class="p-4 space-x-2 space-x-reverse">
+                        <button onclick="openDetailsModal('${call.call_id}')" class="text-blue-600 hover:underline text-xs">פרטים</button>
+                        <button onclick="openEditCallModal('${call.call_id}')" class="text-orange-600 hover:underline text-xs">ערוך</button>
+                    </td>
+                </tr>
+            `;}).join('');
+        }
+
+        function renderTechniciansTable() {
+            const body = document.getElementById('techniciansTableBody');
+            if (!body) return;
+            body.innerHTML = technicians.map(t => `
+                <tr class="border-b hover:bg-slate-50 transition">
+                    <td class="p-4 font-mono text-xs">${t.tech_id}</td>
+                    <td class="p-4 font-bold text-sm">${t.name}</td>
+                    <td class="p-4 text-sm">${t.phone}</td>
+                    <td class="p-4 text-xs text-gray-500">${t.specialties || '-'}</td>
+                    <td class="p-4 text-sm font-bold text-blue-600">${(t.commission_rate * 100).toFixed(0)}%</td>
+                    <td class="p-4">
+                        <span class="px-2 py-1 rounded-full text-[10px] font-bold ${t.is_active ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}">
+                            ${t.is_active ? 'פעיל' : 'לא פעיל'}
+                        </span>
+                    </td>
+                    <td class="p-4 space-x-2 space-x-reverse">
+                        <button onclick="editTech('${t.tech_id}')" class="text-blue-600 hover:underline text-xs">ערוך</button>
+                        <button onclick="deleteTech('${t.tech_id}')" class="text-red-600 hover:underline text-xs">מחק</button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function openTechModal(techId = null) {
+            const tech = techId ? technicians.find(t => t.tech_id === techId) : {
+                tech_id: "", name: "", phone: "", specialties: "", commission_rate: 0.1, home_lat: 32.0853, home_lng: 34.7818
+            };
+
+            document.getElementById('techModalTitle').textContent = techId ? "עריכת טכנאי" : "הוספת טכנאי חדש";
+            document.getElementById('edit_tech_id').value = tech.tech_id;
+            document.getElementById('edit_tech_name').value = tech.name;
+            document.getElementById('edit_tech_phone').value = tech.phone;
+            document.getElementById('edit_tech_specialties').value = tech.specialties || "";
+            document.getElementById('edit_tech_commission').value = tech.commission_rate;
+            document.getElementById('edit_tech_lat').value = tech.home_lat;
+            document.getElementById('edit_tech_lng').value = tech.home_lng;
+
+            document.getElementById('techModal').classList.remove('hidden');
+        }
+
+        function closeTechModal() {
+            document.getElementById('techModal').classList.add('hidden');
+        }
+
+        async function saveTechnician(e) {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+            const techData = Object.fromEntries(formData.entries());
+            
+            // Convert types
+            techData.commission_rate = parseFloat(techData.commission_rate);
+            techData.home_lat = parseFloat(techData.home_lat);
+            techData.home_lng = parseFloat(techData.home_lng);
+            if (!techData.tech_id) delete techData.tech_id;
+
+            try {
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: 'SAVE_TECHNICIAN', technician: techData })
+                });
+                const result = await response.json();
+                if (result.status === "success") {
+                    closeTechModal();
+                    loadData();
+                } else {
+                    alert("שגיאה בשמירת הטכנאי: " + result.message);
+                }
+            } catch (e) {
+                console.error(e);
+                alert("שגיאה בתקשורת עם השרת");
+            }
+        }
+
+        function editTech(techId) {
+            openTechModal(techId);
+        }
+
+        async function deleteTech(techId) {
+            if (!confirm("האם אתה בטוח שברצונך למחוק טכנאי זה?")) return;
+            try {
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: 'DELETE_TECHNICIAN', tech_id: techId })
+                });
+                const result = await response.json();
+                if (result.status === "success") {
+                    loadData();
+                }
+            } catch (e) {
+                console.error(e);
+            }
+        }
+
+        function renderPerformance() {
+            const completedCalls = calls.filter(c => c.status === 'COMPLETED' && c.created_at);
+            
+            // 1. Avg Arrival Time
+            let totalArrivalMins = 0;
+            let arrivalCount = 0;
+            calls.forEach(c => {
+                const arrivalLog = auditLogs.find(l => l.details && l.details.includes('arrived') && l.details.includes(c.call_id));
+                if (arrivalLog && c.created_at) {
+                    const diff = (new Date(arrivalLog.timestamp) - new Date(c.created_at)) / 60000;
+                    if (diff > 0 && diff < 300) {
+                        totalArrivalMins += diff;
+                        arrivalCount++;
+                    }
+                }
+            });
+            document.getElementById('avgArrivalTime').textContent = arrivalCount > 0 ? Math.round(totalArrivalMins / arrivalCount) : '--';
+
+            // 2. Conversion Rate
+            const salesCalls = calls.filter(c => c.issue_type === 'New Door' || c.total_amount > 1000);
+            const converted = salesCalls.filter(c => c.status === 'COMPLETED').length;
+            document.getElementById('conversionRate').textContent = salesCalls.length > 0 ? `${Math.round((converted / salesCalls.length) * 100)}%` : '--';
+
+            // 3. Tech Ranking
+            const techBody = document.getElementById('techPerformanceBody');
+            if (techBody) {
+                techBody.innerHTML = technicians.map(t => {
+                    const techCalls = calls.filter(c => c.assigned_technician === t.name);
+                    const completed = techCalls.filter(c => c.status === 'COMPLETED').length;
+                    const rating = (completed * 10) + (t.rating * 5); // Simple score
+                    return `
+                        <tr class="border-b">
+                            <td class="p-4 font-bold">${t.name}</td>
+                            <td class="p-4">${techCalls.length} (${completed})</td>
+                            <td class="p-4">${arrivalCount > 0 ? 'מעולה' : '-'}</td>
+                            <td class="p-4"><span class="bg-indigo-100 text-indigo-700 px-2 py-1 rounded font-bold">${Math.round(rating)}</span></td>
+                        </tr>
+                    `;
+                }).join('');
+            }
+
+            // 4. Priority Chart
+            const pChart = document.getElementById('priorityChart');
+            if (pChart) {
+                const counts = [1, 2, 3, 4].map(p => calls.filter(c => parseInt(c.priority) === p).length);
+                const max = Math.max(...counts, 1);
+                pChart.innerHTML = counts.map((count, i) => `
+                    <div class="flex flex-col items-center group relative">
+                        <div class="bg-blue-500 w-8 transition-all duration-500" style="height: ${(count/max)*100}px"></div>
+                        <span class="text-[10px] mt-2 font-bold text-slate-500">P${i+1}</span>
+                        <div class="absolute -top-6 hidden group-hover:block bg-slate-800 text-white text-[10px] px-2 py-1 rounded">${count} קריאות</div>
+                    </div>
+                `).join('');
+            }
+        }
+
+        function renderFinancials() {
+            const completedCalls = calls.filter(c => c.status === 'COMPLETED');
+            const totalRevenue = completedCalls.reduce((sum, c) => sum + (parseFloat(c.total_amount) || 0), 0);
+            const totalDeposits = completedCalls.reduce((sum, c) => sum + (parseFloat(c.deposit_paid) || 0), 0);
+            const totalSurcharges = completedCalls.reduce((sum, c) => sum + (parseFloat(c.surcharge_amount) || 0), 0);
+
+            const summary = document.getElementById('financialSummary');
+            if (summary) {
+                summary.innerHTML = `
+                    <div class="grid grid-cols-1 gap-4">
+                        <div class="bg-blue-50 p-4 rounded-lg border border-blue-100">
+                            <div class="text-xs text-blue-600 font-bold mb-1">סה"כ הכנסות ברוטו</div>
+                            <div class="text-2xl font-bold">₪${totalRevenue.toLocaleString()}</div>
+                        </div>
+                        <div class="bg-green-50 p-4 rounded-lg border border-green-100">
+                            <div class="text-xs text-green-600 font-bold mb-1">מקדמות שנגבו</div>
+                            <div class="text-2xl font-bold">₪${totalDeposits.toLocaleString()}</div>
+                        </div>
+                        <div class="bg-orange-50 p-4 rounded-lg border border-orange-100">
+                            <div class="text-xs text-orange-600 font-bold mb-1">הכנסות מתוספות (חירום/לילה)</div>
+                            <div class="text-2xl font-bold">₪${totalSurcharges.toLocaleString()}</div>
+                        </div>
+                    </div>
+                `;
+            }
+
+            const commBody = document.getElementById('commissionsBody');
+            if (commBody) {
+                commBody.innerHTML = technicians.map(t => {
+                    const techCalls = completedCalls.filter(c => c.assigned_technician === t.name);
+                    const techSales = techCalls.reduce((sum, c) => sum + (parseFloat(c.total_amount) || 0), 0);
+                    const commission = techSales * (t.commission_rate || 0.1);
+                    return `
+                        <tr class="border-b">
+                            <td class="p-4 font-bold">${t.name}</td>
+                            <td class="p-4">₪${techSales.toLocaleString()}</td>
+                            <td class="p-4 text-blue-600 font-bold">₪${commission.toLocaleString()}</td>
+                            <td class="p-4"><span class="px-2 py-1 rounded text-[10px] bg-slate-100">ממתין לתשלום</span></td>
+                        </tr>
+                    `;
+                }).join('');
+            }
+        }
+
+        function renderInventory() {
+            const manufacturerCounts = {};
+            const activeAlerts = [];
+
+            calls.forEach(c => {
+                let specs = {};
+                try { specs = typeof c.door_specs === 'string' ? JSON.parse(c.door_specs) : c.door_specs; } catch(e) {}
+                
+                if (specs && specs.manufacturer) {
+                    manufacturerCounts[specs.manufacturer] = (manufacturerCounts[specs.manufacturer] || 0) + 1;
+                }
+                
+                if (specs && specs.warehouse_alert) {
+                    activeAlerts.push({
+                        call_id: c.call_id,
+                        address: c.address,
+                        notes: c.notes,
+                        specs: specs
+                    });
+                }
+            });
+
+            const invBody = document.getElementById('inventoryByManufacturer');
+            if (invBody) {
+                invBody.innerHTML = Object.entries(manufacturerCounts).map(([m, count]) => `
+                    <div class="flex justify-between items-center p-3 border-b">
+                        <span class="font-bold">${m}</span>
+                        <span class="bg-blue-100 text-blue-700 px-3 py-1 rounded-full text-xs font-bold">${count} התקנות/תיקונים</span>
+                    </div>
+                `).join('') || '<div class="text-center p-8 text-gray-400 text-sm">אין נתוני יצרנים זמינים</div>';
+            }
+
+            const alertsBody = document.getElementById('warehouseAlertsBody');
+            if (alertsBody) {
+                alertsBody.innerHTML = activeAlerts.map(a => `
+                    <tr class="border-b bg-orange-50/30">
+                        <td class="p-4 font-bold text-xs">${a.call_id}</td>
+                        <td class="p-4 text-xs">${a.address}</td>
+                        <td class="p-4 text-xs font-bold text-orange-700">יצרן: ${a.specs.manufacturer || '-'} | Bottom Panel: ${a.specs.bottom_panel ? 'כן' : 'לא'}</td>
+                    </tr>
+                `).join('') || '<tr><td colspan="3" class="p-8 text-center text-gray-400 text-sm">אין התראות מלאי פעילות</td></tr>';
+            }
+        }
+
+        function renderFleetList() {
+            const body = document.getElementById('fleetBody');
+            if (!body) return;
+            body.innerHTML = fleet.map(v => `
+                <tr class="border-b hover:bg-slate-50 transition">
+                    <td class="p-4 font-bold">${v.vehicle_id}</td>
+                    <td class="p-4">${v.license_plate}</td>
+                    <td class="p-4 font-mono">${v.weekly_odometer} ק"מ</td>
+                    <td class="p-4 text-xs">${new Date(v.last_oil_check).toLocaleDateString('he-IL')}</td>
+                    <td class="p-4 text-xs">${new Date(v.last_water_check).toLocaleDateString('he-IL')}</td>
+                    <td class="p-4"><span class="px-2 py-1 rounded text-[10px] font-bold ${v.status === 'Active' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}">${v.status}</span></td>
+                </tr>
+            `).join('');
+        }
+
+        function openDetailsModal(callId) {
+            const call = calls.find(c => c.call_id === callId);
+            if (!call) return;
+
+            document.getElementById('detailTitle').textContent = `קריאה #${call.call_id} - ${call.issue_type}`;
+            
+            document.getElementById('generalDetails').innerHTML = `
+                <p><b>כתובת:</b> ${call.address}</p>
+                <p><b>זמן פתיחה:</b> ${new Date(call.created_at).toLocaleString('he-IL')}</p>
+                <p><b>טכנאי:</b> ${call.assigned_technician || 'לא שובץ'}</p>
+            `;
+
+            document.getElementById('financialDetails').innerHTML = `
+                <p><b>סה"כ לתשלום:</b> ₪${call.total_amount || 0}</p>
+                <p><b>מקדמה שנגבתה:</b> ₪${call.deposit_paid || 0}</p>
+                <p><b>תוספת (חירום/לילה):</b> ₪${call.surcharge_amount || 0}</p>
+            `;
+
+            let specs = {};
+            try { specs = typeof call.door_specs === 'string' ? JSON.parse(call.door_specs) : call.door_specs; } catch(e) {}
+            
+            document.getElementById('doorDetails').innerHTML = `
+                <p><b>יצרן:</b> ${specs.manufacturer || '-'}</p>
+                <p><b>Trim:</b> ${specs.trim || '-'}</p>
+                <p><b>Struts:</b> ${specs.struts || '-'}</p>
+                <p><b>Bottom Panel:</b> ${specs.bottom_panel ? 'כן' : 'לא'}</p>
+                <p class="${specs.warehouse_alert ? 'text-red-600 font-bold' : ''}"><b>התראת מחסן:</b> ${specs.warehouse_alert ? 'כן ⚠️' : 'לא'}</p>
+            `;
+
+            document.getElementById('photoDetails').innerHTML = `
+                ${call.before_photo ? `<div><p class="text-[10px] mb-1">לפני:</p><img src="${call.before_photo}" class="rounded border h-32 w-full object-cover"></div>` : ''}
+                ${call.after_photo ? `<div><p class="text-[10px] mb-1">אחרי:</p><img src="${call.after_photo}" class="rounded border h-32 w-full object-cover"></div>` : ''}
+            `;
+
+            document.getElementById('detailNotes').textContent = call.notes || 'אין הערות';
+            document.getElementById('detailsModal').classList.remove('hidden');
+        }
+
+        function closeDetailsModal() {
+            document.getElementById('detailsModal').classList.add('hidden');
+        }
+
+        // Initialize Map
+        function initMap() {
+            map = L.map('map').setView([32.0853, 34.7818], 10); // Center on Israel
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© OpenStreetMap contributors'
+            }).addTo(map);
+        }
+
+        function renderKPIs() {
+            document.getElementById('kpiNew').textContent = calls.filter(c => c.status === 'NEW' || c.status === 'PENDING_ASSIGNMENT').length;
+            document.getElementById('kpiInProgress').textContent = calls.filter(c => ['ASSIGNED', 'IN_ROUTE', 'ARRIVED'].includes(c.status)).length;
+            document.getElementById('kpiCompleted').textContent = calls.filter(c => c.status === 'COMPLETED').length;
+            document.getElementById('kpiActiveTechs').textContent = technicians.filter(t => t.is_active).length;
+        }
+
+        function renderTechList() {
+            const container = document.getElementById('techList');
+            container.innerHTML = technicians.map(t => `
+                <div class="p-4 flex justify-between items-center">
+                    <div>
+                        <div class="font-bold">${t.name}</div>
+                        <div class="text-xs text-gray-500">${t.specialties}</div>
+                    </div>
+                    <span class="px-2 py-1 rounded-full text-[10px] font-bold ${t.is_active ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}">
+                        ${t.is_active ? 'במשמרת' : 'לא פעיל'}
+                    </span>
+                </div>
+            `).join('');
+        }
+
+        function renderCallsTable() {
+            const body = document.getElementById('callsBody');
+            body.innerHTML = calls.map(call => {
+                // Calculate proximity for each technician relative to this call
+                const sortedTechs = technicians.map(t => {
+                    const dist = (call.lat && call.lng && t.current_lat && t.current_lng)
+                        ? haversineDistance(call.lat, call.lng, t.current_lat, t.current_lng)
+                        : Infinity;
+                    return { ...t, distance: dist };
+                }).sort((a, b) => a.distance - b.distance);
+
+                return `
+                <tr class="border-b hover:bg-slate-50 transition">
+                    <td class="p-4 font-mono text-[10px]">${call.call_id}</td>
+                    <td class="p-4 font-bold text-sm">${call.issue_type}</td>
+                    <td class="p-4 text-xs">${call.address}</td>
+                    <td class="p-4"><span class="px-2 py-1 rounded text-[10px] font-bold ${getUrgencyClass(call.priority)}">P${call.priority}</span></td>
+                    <td class="p-4">
+                        <div class="relative group">
+                            <select onchange="manualAssign('${call.call_id}', this.value)" 
+                                    onfocus="fetchSmartRecommendations('${call.call_id}', this)"
+                                    class="text-xs border rounded p-1 max-w-[150px] pr-6 bg-white appearance-none">
+                                <option value="">בחר טכנאי...</option>
+                                ${sortedTechs.map(t => `
+                                    <option value="${t.name}" ${call.assigned_technician === t.name ? 'selected' : ''}>
+                                        ${t.name}
+                                    </option>
+                                `).join('')}
+                            </select>
+                            <div class="absolute left-2 top-2 pointer-events-none">✨</div>
+                        </div>
+                    </td>
+                    <td class="p-4">
+                        <input type="text" value="${call.eta || ''}" 
+                               onblur="updateETA('${call.call_id}', this.value)" 
+                               placeholder="30m" 
+                               class="text-xs border rounded p-1 w-12">
+                    </td>
+                    <td class="p-4 font-bold text-xs">₪${call.total_amount || 0}</td>
+                    <td class="p-4"><span class="text-[10px] font-bold ${getStatusColor(call.status)}">${translateStatus(call.status)}</span></td>
+                    <td class="p-4 space-x-2 space-x-reverse">
+                        <button onclick="openDetailsModal('${call.call_id}')" class="text-blue-600 hover:underline text-xs">פרטים</button>
+                        <button onclick="openEditCallModal('${call.call_id}')" class="text-orange-600 hover:underline text-xs">ערוך</button>
+                    </td>
+                </tr>
+            `;}).join('');
+        }
+
+        function updateMap() {
+            markers.forEach(m => map.removeLayer(m));
+            markers = [];
+
+            // Add calls
+            calls.filter(c => c.status !== 'COMPLETED').forEach(c => {
+                if (!c.lat || !c.lng) return;
+                const marker = L.circleMarker([c.lat, c.lng], {
+                    color: getPriorityColor(c.priority),
+                    fillOpacity: 0.8,
+                    radius: 8
+                }).addTo(map)
+                  .bindPopup(`<b>${c.issue_type} (P${c.priority})</b><br>${c.address}<br>סטטוס: ${translateStatus(c.status)}`);
+                markers.push(marker);
+            });
+
+            // Add technicians
+            technicians.forEach(t => {
+                if (!t.current_lat || !t.current_lng) return;
+                const techIcon = L.divIcon({
+                    html: `<div class="w-8 h-8 rounded-full border-2 border-white shadow-lg flex items-center justify-center text-lg ${t.is_active ? 'bg-green-500' : 'bg-gray-400'}">👨‍🔧</div>`,
+                    className: 'custom-div-icon',
+                    iconSize: [32, 32]
+                });
+                const marker = L.marker([t.current_lat, t.current_lng], { icon: techIcon }).addTo(map)
+                  .bindPopup(`<b>${t.name}</b><br>${t.is_active ? 'במשמרת' : 'לא פעיל'}`);
+                markers.push(marker);
+            });
+        }
+
+        async function manualAssign(callId, techName) {
+            if (!techName) return;
+            try {
+                await fetch(API_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: 'MANUAL_ASSIGN', call_id: callId, tech_name: techName })
+                });
+                loadData();
+            } catch (e) {
+                alert("שגיאה בעדכון השיבוץ");
+            }
+        }
+
+        async function fetchSmartRecommendations(callId, selectElement) {
+            // Prevent multiple rapid calls
+            if (selectElement.dataset.loaded === callId) return;
+
+            try {
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: 'GET_SMART_RECOMMENDATIONS', call_id: callId })
+                });
+                const result = await response.json();
+                
+                if (result.status === "success") {
+                    const currentVal = selectElement.value;
+                    const recommendations = result.recommendations;
+                    
+                    // Rebuild options with smart data
+                    let html = `<option value="">בחר טכנאי (חכם)...</option>`;
+                    recommendations.forEach((rec, index) => {
+                        const star = index === 0 ? " ⭐ " : "";
+                        const busyStr = rec.is_busy ? ` (תור: ${rec.queue_length})` : " (פנוי)";
+                        const costStr = ` [מרחק: +${rec.incremental_dist.toFixed(1)}km]`;
+                        
+                        html += `
+                            <option value="${rec.name}" ${currentVal === rec.name ? 'selected' : ''}>
+                                ${star}${rec.name}${busyStr}${costStr}
+                            </option>
+                        `;
+                    });
+                    
+                    selectElement.innerHTML = html;
+                    selectElement.dataset.loaded = callId;
+                }
+            } catch (e) {
+                console.error("Smart dispatch error", e);
+            }
+        }
+
+        async function updateETA(callId, etaValue) {
+            try {
+                await fetch(API_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: 'SET_ETA', call_id: callId, eta: etaValue })
+                });
+            } catch (e) {
+                alert("שגיאה בעדכון ה-ETA");
+            }
+        }
+
+        function getUrgencyClass(p) {
+            const pr = parseInt(p);
+            if (pr === 1) return 'bg-red-100 text-red-700';
+            if (pr === 2) return 'bg-orange-100 text-orange-700';
+            if (pr === 3) return 'bg-yellow-100 text-yellow-700';
+            return 'bg-blue-100 text-blue-700';
+        }
+
+        function getPriorityColor(p) {
+            const pr = parseInt(p);
+            if (pr === 1) return '#ef4444';
+            if (pr === 2) return '#f97316';
+            if (pr === 3) return '#eab308';
+            return '#3b82f6';
+        }
+
+        function getStatusColor(s) {
+            if (s === 'NEW') return 'text-blue-500';
+            if (s === 'ASSIGNED') return 'text-orange-500';
+            if (s === 'COMPLETED') return 'text-green-500';
+            return 'text-slate-500';
+        }
+
+        function haversineDistance(lat1, lon1, lat2, lon2) {
+            const R = 6371;
+            const dLat = (lat2 - lat1) * Math.PI / 180;
+            const dLon = (lon2 - lon1) * Math.PI / 180;
+            const a = 
+                Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+                Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * 
+                Math.sin(dLon / 2) * Math.sin(dLon / 2);
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+            return R * c;
+        }
+
+        function calculateETA(distance) {
+            // Simple heuristic: 2 minutes per km + 5 minutes overhead
+            if (isNaN(distance)) return '--';
+            const mins = Math.round(distance * 2 + 5);
+            if (mins > 60) {
+                return `${Math.floor(mins / 60)}h ${mins % 60}m`;
+            }
+            return `${mins}m`;
+        }
+
+        function translateStatus(status) {
+            const map = {
+                'NEW': 'חדשה',
+                'PENDING_ASSIGNMENT': 'ממתין לשיבוץ',
+                'ASSIGNED': 'משובצת',
+                'IN_ROUTE': 'בדרך',
+                'ARRIVED': 'במקום',
+                'COMPLETED': 'הושלמה'
+            };
+            return map[status] || status;
+        }
+
+        initMap();
+        loadData();
+        setInterval(loadData, 30000); // Auto refresh every 30s
+    </script>
+</body>
+</html>

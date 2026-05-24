@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Garage CRM - Local Portal</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Assistant:wght@300;400;700&display=swap');
+        body { font-family: 'Assistant', sans-serif; }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen flex flex-col items-center justify-center p-8">
+    <div class="max-w-4xl w-full">
+        <header class="text-center mb-12">
+            <h1 class="text-4xl font-bold text-blue-600 mb-4">Garage CRM POC</h1>
+            <p class="text-gray-600 text-lg">פורטל פיתוח מקומי - גישה לכל הרכיבים</p>
+        </header>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <!-- Customer App -->
+            <a href="customer-app/index.html" class="bg-white p-6 rounded-2xl shadow-lg hover:shadow-xl transition-all transform hover:-translate-y-2 text-center border-t-4 border-blue-500">
+                <div class="text-4xl mb-4">👤</div>
+                <h2 class="text-xl font-bold mb-2">אפליקציית לקוח</h2>
+                <p class="text-gray-500 text-sm">פתיחת קריאות שירות ומעקב אחר סטטוס</p>
+            </a>
+
+            <!-- Dispatcher App -->
+            <a href="dispatcher-app/index.html" class="bg-white p-6 rounded-2xl shadow-lg hover:shadow-xl transition-all transform hover:-translate-y-2 text-center border-t-4 border-orange-500">
+                <div class="text-4xl mb-4">🖥️</div>
+                <h2 class="text-xl font-bold mb-2">לוח דיספצ'ר</h2>
+                <p class="text-gray-600 text-sm">ניהול קריאות, שיבוץ טכנאים ומפת צי רכב</p>
+            </a>
+
+            <!-- Technician App -->
+            <a href="technician-app/index.html" class="bg-white p-6 rounded-2xl shadow-lg hover:shadow-xl transition-all transform hover:-translate-y-2 text-center border-t-4 border-green-500">
+                <div class="text-4xl mb-4">🔧</div>
+                <h2 class="text-xl font-bold mb-2">אפליקציית טכנאי</h2>
+                <p class="text-gray-600 text-sm">דיווח משמרת, עדכון סטטוס וביצוע עבודות</p>
+            </a>
+        </div>
+
+        <footer class="mt-16 text-center text-gray-400 text-sm">
+            <p>לפיתוח מקומי של Backend, השתמש ב-<code>clasp</code> בתיקיית <code>apps-script</code></p>
+        </footer>
+    </div>
+</body>
+</html>
